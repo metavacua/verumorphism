@@ -1,0 +1,153 @@
+9316  futex(0x56e9f886c76c, FUTEX_WAIT_BITSET_PRIVATE|FUTEX_CLOCK_REALTIME, 0, NULL, FUTEX_BITSET_MATCH_ANY <unfinished ...>
+9315  restart_syscall(<... resuming interrupted read ...>) = 1
+9315  read(0, "(let ((weaver-path (pathname \"/W"..., 4096) = 43
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "\n", 4096)               = 1
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "  (format t \"Pathname object cre"..., 4096) = 57
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "\n", 4096)               = 1
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "  (format t \"Directory listing: "..., 4096) = 64
+9315  write(1, "Pathname object created: #P\"/Wea"..., 38) = 38
+9315  newfstatat(AT_FDCWD, "/Weaver", 0x70bfcc12f670, 0) = -1 ENOENT (No such file or directory)
+9315  newfstatat(AT_FDCWD, "/Weaver", 0x70bfcc12f670, AT_SYMLINK_NOFOLLOW) = -1 ENOENT (No such file or directory)
+9315  write(1, "Directory listing: NIL\n", 23) = 23
+9315  write(1, "NIL", 3)                = 3
+9315  write(1, "\n", 1)                 = 1
+9315  write(1, "* ", 2)                 = 2
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "\n", 4096)               = 1
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "\n", 4096)               = 1
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "(let ((parsed-path (parse-namest"..., 4096) = 51
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "\n", 4096)               = 1
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "  (format t \"Parsed pathname obj"..., 4096) = 56
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "\n", 4096)               = 1
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "  (format t \"Directory listing u"..., 4096) = 82
+9315  write(1, "Parsed pathname object: #P\"/Weav"..., 37) = 37
+9315  newfstatat(AT_FDCWD, "/Weaver", 0x70bfcc12f670, 0) = -1 ENOENT (No such file or directory)
+9315  newfstatat(AT_FDCWD, "/Weaver", 0x70bfcc12f670, AT_SYMLINK_NOFOLLOW) = -1 ENOENT (No such file or directory)
+9315  write(1, "Directory listing using parsed p"..., 41) = 41
+9315  write(1, "NIL", 3)                = 3
+9315  write(1, "\n", 1)                 = 1
+9315  write(1, "* ", 2)                 = 2
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "\n", 4096)               = 1
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "(let ((weaver-dir #P\"/Weaver/\"))"..., 4096) = 33
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "\n", 4096)               = 1
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "  (format t \"Listing with wildca"..., 4096) = 91
+9315  newfstatat(AT_FDCWD, "/Weaver", 0x70bfcc12f610, 0) = -1 ENOENT (No such file or directory)
+9315  newfstatat(AT_FDCWD, "/Weaver", 0x70bfcc12f610, AT_SYMLINK_NOFOLLOW) = -1 ENOENT (No such file or directory)
+9315  write(1, "Listing with wildcard: NIL\n", 27) = 27
+9315  write(1, "NIL", 3)                = 3
+9315  write(1, "\n", 1)                 = 1
+9315  write(1, "* ", 2)                 = 2
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "\n", 4096)               = 1
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "(directory #P\"/Weaver/\")\n", 4096) = 25
+9315  newfstatat(AT_FDCWD, "/Weaver", 0x70bfcc12f690, 0) = -1 ENOENT (No such file or directory)
+9315  newfstatat(AT_FDCWD, "/Weaver", 0x70bfcc12f690, AT_SYMLINK_NOFOLLOW) = -1 ENOENT (No such file or directory)
+9315  write(1, "NIL", 3)                = 3
+9315  write(1, "\n", 1)                 = 1
+9315  write(1, "* ", 2)                 = 2
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "\n", 4096)               = 1
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "(handler-case\n", 4096)  = 14
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "\n", 4096)               = 1
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "(with-open-file (stream #P\"/Weav"..., 4096) = 66
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "\n", 4096)               = 1
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "(let ((first-line (read-line str"..., 4096) = 48
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "\n", 4096)               = 1
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "(if (eq first-line :eof)\n", 4096) = 25
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "\n", 4096)               = 1
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "(format t \"Successfully opened f"..., 4096) = 87
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "\n", 4096)               = 1
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "mediately.~%\")\n", 4096) = 15
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "\n", 4096)               = 1
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "* (format t \"Successfully read f"..., 4096) = 102
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "\n", 4096)               = 1
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "(file-error (e)\n", 4096) = 16
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "\n", 4096)               = 1
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "(format *error-output* \"~&Error "..., 4096) = 84
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "\n", 4096)               = 1
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "(error (e)\n", 4096)     = 11
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "\n", 4096)               = 1
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 0 (Timeout)
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, -1) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "(format *error-output* \"~&An une"..., 4096) = 93
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "\n", 4096)               = 1
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "(with-open-file (stream #P\"/Weav"..., 4096) = 66
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "\n", 4096)               = 1
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "(let ((first-line (read-line str"..., 4096) = 48
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "\n", 4096)               = 1
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "(if (eq first-line :eof)\n", 4096) = 25
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "\n", 4096)               = 1
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "(format t \"Successfully opened f"..., 4096) = 87
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "\n", 4096)               = 1
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "mediately.~%\")\n", 4096) = 15
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "\n", 4096)               = 1
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "* (format t \"Successfully read f"..., 4096) = 102
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "\n", 4096)               = 1
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "(file-error (e)\n", 4096) = 16
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "\n", 4096)               = 1
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "(format *error-output* \"~&Error "..., 4096) = 84
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "\n", 4096)               = 1
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "(error (e)\n", 4096)     = 11
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "\n", 4096)               = 1
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 0 (Timeout)
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, -1) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "(format *error-output* \"~&An une"..., 4096) = 82
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 0 (Timeout)
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, -1) = 1 ([{fd=0, revents=POLLIN}])
+9315  read(0, "\n", 4096)               = 1
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, 0) = 0 (Timeout)
+9315  poll([{fd=0, events=POLLIN|POLLPRI}], 1, -1 <detached ...>

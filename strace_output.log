@@ -1,0 +1,120 @@
+34801 futex(0x5c5d45ee976c, FUTEX_WAIT_BITSET_PRIVATE|FUTEX_CLOCK_REALTIME, 0, NULL, FUTEX_BITSET_MATCH_ANY <unfinished ...>
+34800 restart_syscall(<... resuming interrupted read ...> <unfinished ...>
+34964 pselect6(5, [4], NULL, NULL, NULL, NULL) = 1 (in [4])
+34964 --- SIGSEGV {si_signo=SIGSEGV, si_code=SEGV_ACCERR, si_addr=0x50417700} ---
+34964 mprotect(0x50417000, 4096, PROT_READ|PROT_WRITE|PROT_EXEC) = 0
+34964 rt_sigreturn({mask=[]})           = 16645
+34964 --- SIGSEGV {si_signo=SIGSEGV, si_code=SEGV_ACCERR, si_addr=0x503e3af0} ---
+34964 mprotect(0x503e3000, 4096, PROT_READ|PROT_WRITE|PROT_EXEC) = 0
+34964 rt_sigreturn({mask=[]})           = 16632
+34964 accept(4, {sa_family=AF_INET, sin_port=htons(53776), sin_addr=inet_addr("127.0.0.1")}, [16]) = 5
+34964 getsockname(5, {sa_family=AF_INET, sin_port=htons(8080), sin_addr=inet_addr("127.0.0.1")}, [16]) = 0
+34964 getpeername(5, {sa_family=AF_INET, sin_port=htons(53776), sin_addr=inet_addr("127.0.0.1")}, [16]) = 0
+34964 newfstatat(5, "", {st_mode=S_IFSOCK|0777, st_size=0, ...}, AT_EMPTY_PATH) = 0
+34964 getpeername(5, {sa_family=AF_INET, sin_port=htons(53776), sin_addr=inet_addr("127.0.0.1")}, [16]) = 0
+34964 getpeername(5, {sa_family=AF_INET, sin_port=htons(53776), sin_addr=inet_addr("127.0.0.1")}, [16]) = 0
+34964 rt_sigprocmask(SIG_BLOCK, [HUP INT QUIT ALRM TERM CHLD TSTP URG XCPU XFSZ VTALRM PROF WINCH IO], [], 8) = 0
+34964 rt_sigprocmask(SIG_BLOCK, ~[], [HUP INT QUIT ALRM TERM CHLD TSTP URG XCPU XFSZ VTALRM PROF WINCH IO], 8) = 0
+34964 clone3({flags=CLONE_VM|CLONE_FS|CLONE_FILES|CLONE_SIGHAND|CLONE_THREAD|CLONE_SYSVSEM|CLONE_SETTLS|CLONE_PARENT_SETTID|CLONE_CHILD_CLEARTID, child_tid=0x76b42b95f910, parent_tid=0x76b42b95f910, exit_signal=0, stack=0x76b42b760000, stack_size=0x1fef00, tls=0x76b42b95f640} <unfinished ...>
+35290 rseq(0x76b42b95ffe0, 0x20, 0, 0x53053053 <unfinished ...>
+34964 <... clone3 resumed> => {parent_tid=[35290]}, 88) = 35290
+35290 <... rseq resumed>)               = 0
+34964 rt_sigprocmask(SIG_SETMASK, [HUP INT QUIT ALRM TERM CHLD TSTP URG XCPU XFSZ VTALRM PROF WINCH IO],  <unfinished ...>
+35290 set_robust_list(0x76b42b95f920, 24 <unfinished ...>
+34964 <... rt_sigprocmask resumed>NULL, 8) = 0
+34964 rt_sigprocmask(SIG_SETMASK, [],  <unfinished ...>
+35290 <... set_robust_list resumed>)    = 0
+34964 <... rt_sigprocmask resumed>NULL, 8) = 0
+35290 rt_sigprocmask(SIG_SETMASK, [HUP INT QUIT ALRM TERM CHLD TSTP URG XCPU XFSZ VTALRM PROF WINCH IO],  <unfinished ...>
+34964 pselect6(5, [4], NULL, NULL, NULL, NULL <unfinished ...>
+35290 <... rt_sigprocmask resumed>NULL, 8) = 0
+35290 gettid()                          = 35290
+35290 sigaltstack({ss_sp=0x76b42bb68268, ss_flags=0, ss_size=286720}, NULL) = 0
+35290 rt_sigprocmask(SIG_UNBLOCK, [HUP INT QUIT ALRM TERM CHLD TSTP URG XCPU XFSZ VTALRM PROF WINCH IO], NULL, 8) = 0
+35290 getpeername(5, {sa_family=AF_INET, sin_port=htons(53776), sin_addr=inet_addr("127.0.0.1")}, [16]) = 0
+35290 getsockname(5, {sa_family=AF_INET, sin_port=htons(8080), sin_addr=inet_addr("127.0.0.1")}, [16]) = 0
+35290 poll([{fd=5, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=5, revents=POLLIN}])
+35290 read(5, "GET /test-relative HTTP/1.1\r\nHos"..., 4096) = 479
+35290 newfstatat(AT_FDCWD, "/home/madsci/quicklisp/dists/quicklisp/software/hunchentoot-v1.3.1/www/test-relative", 0x76b42b95e040, 0) = -1 ENOENT (No such file or directory)
+35290 newfstatat(AT_FDCWD, "/home/madsci/quicklisp/dists/quicklisp/software/hunchentoot-v1.3.1/www/test-relative", 0x76b42b95e040, AT_SYMLINK_NOFOLLOW) = -1 ENOENT (No such file or directory)
+35290 write(2, "127.0.0.1 - [2025-05-07 13:27:17"..., 157) = 157
+35290 write(5, "HTTP/1.1 404 Not Found\r\nContent-"..., 515) = 515
+35290 poll([{fd=5, events=POLLIN|POLLPRI}], 1, 0) = 0 (Timeout)
+35290 poll([{fd=5, events=POLLIN|POLLPRI}], 1, 20000) = 1 ([{fd=5, revents=POLLIN}])
+35290 read(5, "GET /test-absolute HTTP/1.1\r\nHos"..., 4096) = 479
+35290 newfstatat(AT_FDCWD, "/home/madsci/quicklisp/dists/quicklisp/software/hunchentoot-v1.3.1/www/test-absolute", 0x76b42b95e040, 0) = -1 ENOENT (No such file or directory)
+35290 newfstatat(AT_FDCWD, "/home/madsci/quicklisp/dists/quicklisp/software/hunchentoot-v1.3.1/www/test-absolute", 0x76b42b95e040, AT_SYMLINK_NOFOLLOW) = -1 ENOENT (No such file or directory)
+35290 write(2, "127.0.0.1 - [2025-05-07 13:27:22"..., 157) = 157
+35290 write(5, "HTTP/1.1 404 Not Found\r\nContent-"..., 515) = 515
+35290 poll([{fd=5, events=POLLIN|POLLPRI}], 1, 0) = 0 (Timeout)
+35290 poll([{fd=5, events=POLLIN|POLLPRI}], 1, 20000) = 1 ([{fd=5, revents=POLLIN}])
+35290 read(5, "GET / HTTP/1.1\r\nHost: localhost:"..., 4096) = 466
+35290 newfstatat(AT_FDCWD, "/home/madsci/quicklisp/dists/quicklisp/software/hunchentoot-v1.3.1/www/index.html", 0x76b42b95e040, 0) = -1 ENOENT (No such file or directory)
+35290 newfstatat(AT_FDCWD, "/home/madsci/quicklisp/dists/quicklisp/software/hunchentoot-v1.3.1/www/index.html", 0x76b42b95e040, AT_SYMLINK_NOFOLLOW) = -1 ENOENT (No such file or directory)
+35290 write(2, "127.0.0.1 - [2025-05-07 13:27:24"..., 144) = 144
+35290 write(5, "HTTP/1.1 404 Not Found\r\nContent-"..., 502) = 502
+35290 poll([{fd=5, events=POLLIN|POLLPRI}], 1, 0) = 0 (Timeout)
+35290 poll([{fd=5, events=POLLIN|POLLPRI}], 1, 20000) = 0 (Timeout)
+35290 close(5)                          = 0
+35290 futex(0x10019e55f8, FUTEX_WAKE_PRIVATE, 1) = 0
+35290 rt_sigprocmask(SIG_BLOCK, [HUP INT QUIT ALRM TERM CHLD TSTP URG XCPU XFSZ VTALRM WINCH IO], NULL, 8) = 0
+35290 rt_sigprocmask(SIG_BLOCK, [HUP INT QUIT USR2 PIPE ALRM TERM CHLD TSTP URG XCPU XFSZ VTALRM PROF WINCH IO], NULL, 8) = 0
+35290 rt_sigprocmask(SIG_BLOCK, ~[RT_1], NULL, 8) = 0
+35290 exit(0)                           = ?
+35290 +++ exited with 0 +++
+34964 <... pselect6 resumed>)           = 1 (in [4])
+34964 accept(4, {sa_family=AF_INET, sin_port=htons(47176), sin_addr=inet_addr("127.0.0.1")}, [16]) = 5
+34964 getsockname(5, {sa_family=AF_INET, sin_port=htons(8080), sin_addr=inet_addr("127.0.0.1")}, [16]) = 0
+34964 getpeername(5, {sa_family=AF_INET, sin_port=htons(47176), sin_addr=inet_addr("127.0.0.1")}, [16]) = 0
+34964 newfstatat(5, "", {st_mode=S_IFSOCK|0777, st_size=0, ...}, AT_EMPTY_PATH) = 0
+34964 getpeername(5, {sa_family=AF_INET, sin_port=htons(47176), sin_addr=inet_addr("127.0.0.1")}, [16]) = 0
+34964 getpeername(5, {sa_family=AF_INET, sin_port=htons(47176), sin_addr=inet_addr("127.0.0.1")}, [16]) = 0
+34964 rt_sigprocmask(SIG_BLOCK, [HUP INT QUIT ALRM TERM CHLD TSTP URG XCPU XFSZ VTALRM PROF WINCH IO], [], 8) = 0
+34964 rt_sigprocmask(SIG_BLOCK, ~[], [HUP INT QUIT ALRM TERM CHLD TSTP URG XCPU XFSZ VTALRM PROF WINCH IO], 8) = 0
+34964 clone3({flags=CLONE_VM|CLONE_FS|CLONE_FILES|CLONE_SIGHAND|CLONE_THREAD|CLONE_SYSVSEM|CLONE_SETTLS|CLONE_PARENT_SETTID|CLONE_CHILD_CLEARTID, child_tid=0x76b42b95f910, parent_tid=0x76b42b95f910, exit_signal=0, stack=0x76b42b760000, stack_size=0x1fef00, tls=0x76b42b95f640} <unfinished ...>
+35780 rseq(0x76b42b95ffe0, 0x20, 0, 0x53053053 <unfinished ...>
+34964 <... clone3 resumed> => {parent_tid=[35780]}, 88) = 35780
+35780 <... rseq resumed>)               = 0
+34964 rt_sigprocmask(SIG_SETMASK, [HUP INT QUIT ALRM TERM CHLD TSTP URG XCPU XFSZ VTALRM PROF WINCH IO],  <unfinished ...>
+35780 set_robust_list(0x76b42b95f920, 24 <unfinished ...>
+34964 <... rt_sigprocmask resumed>NULL, 8) = 0
+35780 <... set_robust_list resumed>)    = 0
+34964 rt_sigprocmask(SIG_SETMASK, [],  <unfinished ...>
+35780 rt_sigprocmask(SIG_SETMASK, [HUP INT QUIT ALRM TERM CHLD TSTP URG XCPU XFSZ VTALRM PROF WINCH IO],  <unfinished ...>
+34964 <... rt_sigprocmask resumed>NULL, 8) = 0
+35780 <... rt_sigprocmask resumed>NULL, 8) = 0
+34964 pselect6(5, [4], NULL, NULL, NULL, NULL <unfinished ...>
+35780 gettid()                          = 35780
+35780 sigaltstack({ss_sp=0x76b42bb68268, ss_flags=0, ss_size=286720}, NULL) = 0
+35780 rt_sigprocmask(SIG_UNBLOCK, [HUP INT QUIT ALRM TERM CHLD TSTP URG XCPU XFSZ VTALRM PROF WINCH IO], NULL, 8) = 0
+35780 getpeername(5, {sa_family=AF_INET, sin_port=htons(47176), sin_addr=inet_addr("127.0.0.1")}, [16]) = 0
+35780 getsockname(5, {sa_family=AF_INET, sin_port=htons(8080), sin_addr=inet_addr("127.0.0.1")}, [16]) = 0
+35780 poll([{fd=5, events=POLLIN|POLLPRI}], 1, 0) = 1 ([{fd=5, revents=POLLIN}])
+35780 read(5, "GET / HTTP/1.1\r\nHost: localhost:"..., 4096) = 466
+35780 newfstatat(AT_FDCWD, "/home/madsci/quicklisp/dists/quicklisp/software/hunchentoot-v1.3.1/www/index.html", 0x76b42b95e040, 0) = -1 ENOENT (No such file or directory)
+35780 newfstatat(AT_FDCWD, "/home/madsci/quicklisp/dists/quicklisp/software/hunchentoot-v1.3.1/www/index.html", 0x76b42b95e040, AT_SYMLINK_NOFOLLOW) = -1 ENOENT (No such file or directory)
+35780 write(2, "127.0.0.1 - [2025-05-07 13:31:11"..., 144) = 144
+35780 write(5, "HTTP/1.1 404 Not Found\r\nContent-"..., 502) = 502
+35780 poll([{fd=5, events=POLLIN|POLLPRI}], 1, 0) = 0 (Timeout)
+35780 poll([{fd=5, events=POLLIN|POLLPRI}], 1, 20000) = 1 ([{fd=5, revents=POLLIN}])
+35780 read(5, "GET /test-absolute HTTP/1.1\r\nHos"..., 4096) = 479
+35780 newfstatat(AT_FDCWD, "/home/madsci/quicklisp/dists/quicklisp/software/hunchentoot-v1.3.1/www/test-absolute", 0x76b42b95e040, 0) = -1 ENOENT (No such file or directory)
+35780 newfstatat(AT_FDCWD, "/home/madsci/quicklisp/dists/quicklisp/software/hunchentoot-v1.3.1/www/test-absolute", 0x76b42b95e040, AT_SYMLINK_NOFOLLOW) = -1 ENOENT (No such file or directory)
+35780 write(2, "127.0.0.1 - [2025-05-07 13:31:13"..., 157) = 157
+35780 write(5, "HTTP/1.1 404 Not Found\r\nContent-"..., 515) = 515
+35780 poll([{fd=5, events=POLLIN|POLLPRI}], 1, 0) = 0 (Timeout)
+35780 poll([{fd=5, events=POLLIN|POLLPRI}], 1, 20000) = 1 ([{fd=5, revents=POLLIN}])
+35780 read(5, "GET /test-relative HTTP/1.1\r\nHos"..., 4096) = 479
+35780 newfstatat(AT_FDCWD, "/home/madsci/quicklisp/dists/quicklisp/software/hunchentoot-v1.3.1/www/test-relative", 0x76b42b95e040, 0) = -1 ENOENT (No such file or directory)
+35780 newfstatat(AT_FDCWD, "/home/madsci/quicklisp/dists/quicklisp/software/hunchentoot-v1.3.1/www/test-relative", 0x76b42b95e040, AT_SYMLINK_NOFOLLOW) = -1 ENOENT (No such file or directory)
+35780 write(2, "127.0.0.1 - [2025-05-07 13:31:15"..., 157) = 157
+35780 write(5, "HTTP/1.1 404 Not Found\r\nContent-"..., 515) = 515
+35780 poll([{fd=5, events=POLLIN|POLLPRI}], 1, 0) = 0 (Timeout)
+35780 poll([{fd=5, events=POLLIN|POLLPRI}], 1, 20000) = 0 (Timeout)
+35780 close(5)                          = 0
+35780 futex(0x10019e55f8, FUTEX_WAKE_PRIVATE, 1) = 0
+35780 rt_sigprocmask(SIG_BLOCK, [HUP INT QUIT ALRM TERM CHLD TSTP URG XCPU XFSZ VTALRM WINCH IO], NULL, 8) = 0
+35780 rt_sigprocmask(SIG_BLOCK, [HUP INT QUIT USR2 PIPE ALRM TERM CHLD TSTP URG XCPU XFSZ VTALRM PROF WINCH IO], NULL, 8) = 0
+35780 rt_sigprocmask(SIG_BLOCK, ~[RT_1], NULL, 8) = 0
+35780 exit(0)                           = ?
+35780 +++ exited with 0 +++

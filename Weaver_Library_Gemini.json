@@ -1,0 +1,99 @@
+The weaver library defines the following functions:
+Complex numbers are semantically interpreted as proof and refutation degrees; we refer to programs encoded in complex numbers as weavexes (generalizations of regexes).
+Dual(z) -> cmplx(rl(z), -iml(z))
+IndR(e1, e2, ct) -> rl(AxConR(e1, ct)) + rl(AxConR(e2, ct))
+IndL(e1, e2, ct) -> #C(0 1) * (iml(AxConR(e1, ct)) + iml(AxConR(e2, ct)))
+DepR(e1, e2, ct) -> (rl(AxConR(e1, ct)) + rl(AxConR(e2, ct))) / 2.0
+DepL(e1, e2, ct) -> #C(0 1) * ((iml(AxConR(e1, ct)) + iml(AxConR(e2, ct))) / 2.0)
+AxConR(e, tt) -> case tt: (:proof, :meta) ? (e=='CON' ? #C(1 0) : #C(0 0)) : #C(0 0)
+AxInconL(e, tt) -> case tt: (:refute, :meta) ? (e=='INCON' ? #C(0 1) : #C(0 0)) : #C(0 0)
+
+{
+  "weaver_constants_axioms": {
+    "context_description": "Defines the constants and axioms of the Weaver system for complex number representation.",
+    "constants": {
+      "CON": {
+        "value": "#C(1 0)",
+        "description": "Represents the concept of Consistency in Weaver, encoded as a complex number."
+      },
+      "INCON": {
+        "value": "#C(0 1)",
+        "description": "Represents the concept of Inconsistency in Weaver, encoded as a complex number."
+      }
+    },
+    "axioms": [
+      {
+        "name": "AxConR",
+        "description": "Axiom of Consistency - Right-handed. Defines the consistency value for expressions.",
+        "input_type": ["expression"],
+        "output_type": "complex",
+        "rule": "AxConR(e) = (e=='CON' ? #C(1 0) : #C(0 0))"
+      },
+      {
+        "name": "AxInconL",
+        "description": "Axiom of Inconsistency - Left-handed. Defines the inconsistency value for expressions.",
+        "input_type": ["expression"],
+        "output_type": "complex",
+        "rule": "AxInconL(e) = (e=='INCON' ? #C(0 1) : #C(0 0))"
+      }
+    ]
+  }
+}
+
+{
+  "weaver_operator_Dual": {
+    "operator_context": "Definition of the Dual operator in the Weaver system.",
+    "operator": {
+      "name": "Dual",
+      "description": "Computes the dual of a complex number, reflecting it across the real axis.",
+      "input_type": "complex",
+      "output_type": "complex",
+      "rule": "Dual(z) = cmplx(rl(z), -iml(z))"
+    }
+  }
+}
+
+{
+  "weaver_operator_Ind": {
+    "operator_context": "Definition of the Independence operators (IndR and IndL) in the Weaver system.",
+    "operators": [
+      {
+        "name": "IndR",
+        "description": "Right-handed independence operator. Combines the real parts of two Weaver expressions.",
+        "input_type": ["complex", "complex"],
+        "output_type": "complex",
+        "rule": "IndR(e1, e2) = rl(AxConR(e1)) + rl(AxConR(e2))"
+      },
+      {
+        "name": "IndL",
+        "description": "Left-handed independence operator. Combines the imaginary parts of two Weaver expressions.",
+        "input_type": ["complex", "complex"],
+        "output_type": "complex",
+        "rule": "IndL(e1, e2) = #C(0 1) * (iml(AxConR(e1)) + iml(AxConR(e2)))"
+      }
+    ]
+  }
+}
+
+{
+  "weaver_operator_Dep": {
+    "operator_context": "Definition of the Dependence operators (DepR and DepL) in the Weaver system.",
+    "operators": [
+      {
+        "name": "DepR",
+        "description": "Right-handed dependence operator. Averages the real parts of two Weaver expressions.",
+        "input_type": ["complex", "complex"],
+        "output_type": "complex",
+        "rule": "DepR(e1, e2) = (rl(AxConR(e1)) + rl(AxConR(e2))) / 2.0"
+      },
+      {
+        "name": "DepL",
+        "description": "Left-handed dependence operator. Averages the imaginary parts of two Weaver expressions.",
+        "input_type": ["complex", "complex"],
+        "output_type": "complex",
+        "rule": "DepL(e1, e2) = #C(0 1) * ((iml(AxConR(e1)) + iml(AxConR(e2))) / 2.0)"
+      }
+    ]
+  }
+}
+
