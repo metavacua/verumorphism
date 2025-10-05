@@ -8,31 +8,51 @@
 
 (defclass relnet-node ()
   ((name :initarg :name :accessor relnet-node-name)
-   (type :initarg :type :accessor relnet-node-type)))
+   (type :initarg :type :accessor relnet-node-type))
+  (:documentation "Represents a node in the relational network, enhanced with a type.
+This is a basic structure for elements within the prover's universe.
 
-(defvar *knowledge-base* nil "Global Knowledge Base (Minimal for Prototype)")
+Slots:
+  - NAME: The symbolic name of the node.
+  - TYPE: The type of the node (e.g., 'formula', 'term')."))
+
+(defvar *knowledge-base* nil
+  "The global knowledge base for the refuter. In this prototype, it is not
+used beyond being passed to rule functions.")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Complexity Metrics - Global Counters (Kept but not Printed in Concise Output)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defvar *refutation-axiom-applications-count* 0 "Counter for axiom applications in refutation.")
-(defvar *refutation-rule-applications-count* 0 "Counter for rule applications in refutation.")
+(defvar *refutation-axiom-applications-count* 0
+  "Counts axiom applications during a refutation attempt. Reset by `initialize-refutation-knowledge-base`.")
+(defvar *refutation-rule-applications-count* 0
+  "Counts rule applications during a refutation attempt. Reset by `initialize-refutation-knowledge-base`.")
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Formula Representation (WFF and RFF as Lisp Lists)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun make-incon () '(incon))
-(defun make-dep (formula1 formula2) `(dep ,formula1 ,formula2))
-(defun make-ind (formula1 formula2) `(ind ,formula1 ,formula2))
-(defun make-dual (formula) `(dual ,formula)) ; New formula constructor for 'dual'
+(defun make-incon ()
+  "Constructs a constant 'incon' (inconsistency) formula."
+  '(incon))
+(defun make-dep (formula1 formula2)
+  "Constructs a dependence formula '(dep F1 F2)'."
+  `(dep ,formula1 ,formula2))
+(defun make-ind (formula1 formula2)
+  "Constructs an independence formula '(ind F1 F2)'."
+  `(ind ,formula1 ,formula2))
+(defun make-dual (formula)
+  "Constructs a dual formula '(dual F)'."
+  `(dual ,formula))
 
 (defun formula-type (formula)
+  "Extracts the type (e.g., 'dep', 'ind', 'con') from a formula."
   (first formula))
 
 (defun formula-arguments (formula)
+  "Extracts the arguments from a formula."
   (rest formula))
 
 
@@ -44,11 +64,21 @@
 ;; Incon Base Case: (incon) is refuted immediately
 
 (defun axiom-inconl (formula)
-  "Axiom InconL: Refutes (ind A A) and (incon) - Base case for refutation.
-   Formula-aware.
-   [Complexity Metric: refutation-axiom-applications-count]
-   [Output: Concise - No verbose output]
-   MODIFIED: Now handles both (ind A A) and (incon) base cases."
+  "Implements the 'Inconsistency Left' (InconL) axiom.
+
+This axiom serves as the base case for refutation. It applies to two forms:
+1. The basic inconsistency formula `(incon)`.
+2. Any independence formula of the form `(ind A A)`.
+
+Parameters:
+  - FORMULA: The formula to check against the axiom.
+
+Returns:
+  - The `formula` itself if the axiom applies.
+  - `NIL` otherwise.
+
+Side Effects:
+  - Increments `*refutation-axiom-applications-count*`."
   (incf *refutation-axiom-applications-count*)
   (cond
     ((eq (formula-type formula) 'incon) formula)              ; Base case: (incon) is refuted
@@ -62,10 +92,22 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun rule-duald-dual-l (formula kb)
-  "Rule dualdL: Simplifies (dual (dual A)) to A.
-   Formula-aware.
-   [Complexity Metric: refutation-rule-applications-count]
-   [Output: Concise - No verbose output]"
+  "Implements the 'Dual-Dual Left' rule, which simplifies `(dual (dual A))` to `A`.
+
+This is a simplification rule that unwraps a doubly-nested dual. The resulting
+formula `A` is then passed to the refuter for further processing.
+
+Parameters:
+  - FORMULA: The formula to apply the rule to.
+  - KB: The knowledge base (ignored).
+
+Returns:
+  - The simplified inner formula `A` if the rule applies.
+  - `NIL` otherwise.
+
+Side Effects:
+  - Increments `*refutation-rule-applications-count*`."
+  (declare (ignore kb))
   (incf *refutation-rule-applications-count*)
   (if (and (eq (formula-type formula) 'dual)
            (eq (formula-type (second formula)) 'dual)) ; Check if it's (dual (dual A))
@@ -74,11 +116,22 @@
 
 
 (defun rule-dual-incon (formula kb)
-  "Rule dual-incon: (dual incon) is NOT refuted. Returns NIL.
-   Formula-aware.
-   [Complexity Metric: refutation-rule-applications-count]
-   [Output: Concise - No verbose output]
-   NEW RULE: Handles (dual incon) base case - non-refutation."
+  "Implements a specific rule for `(dual incon)`, which is not refutable.
+
+This rule acts as a specific base case, preventing the refutation of `(dual incon)`.
+If the formula is not `(dual incon)`, it passes control to `rule-duald-dual-l`.
+
+Parameters:
+  - FORMULA: The formula to apply the rule to.
+  - KB: The knowledge base.
+
+Returns:
+  - `NIL` if the formula is `(dual incon)`.
+  - Otherwise, the result of calling `rule-duald-dual-l`.
+
+Side Effects:
+  - Increments `*refutation-rule-applications-count*`."
+  (declare (ignore kb))
   (incf *refutation-rule-applications-count*)
   (if (and (eq (formula-type formula) 'dual)
            (eq (formula-type (second formula)) 'incon)) ; Check if it's (dual incon)
@@ -87,11 +140,22 @@
 
 
 (defun rule-dual-l (formula kb)
-  "Rule dualL: Refutes (dual A) if A is refuted.
-   Formula-aware.
-   [Complexity Metric: refutation-rule-applications-count]
-   [Output: Concise - No verbose output]
-   MODIFIED: Now calls rule-dual-incon first to handle (dual incon) base case."
+  "Implements the 'Dual Left' (dualL) rule.
+
+This rule applies to formulas of the form `(dual A)`. It attempts to refute the
+formula by recursively trying to refute the inner formula `A`.
+
+Parameters:
+  - FORMULA: The formula to apply the rule to.
+  - KB: The knowledge base.
+
+Returns:
+  - The original `formula` if the sub-refutation of `A` succeeds.
+  - Otherwise, the result of `rule-dual-incon` (for base cases like `(dual incon)`).
+
+Side Effects:
+  - Increments `*refutation-rule-applications-count*`."
+  (declare (ignore kb))
   (incf *refutation-rule-applications-count*)
   (if (eq (formula-type formula) 'dual)
       (let ((formulaA (second formula)))
@@ -103,12 +167,23 @@
 
 
 (defun rule-independence-l (formula kb)
-  "Independence Left Rule (rule independenceL) - Now handles ONLY (ind A B) - Parallel OR.
-   Formula-aware. Parallel OR in Refutation.
-   Applies to (ind A B) formulae.
-   [Complexity Metric: refutation-rule-applications-count]
-   [Output: Concise - No verbose output]
-   MODIFIED: Now ONLY handles (ind A B) formulae."
+  "Implements the 'Independence Left' (independenceL) rule.
+
+This rule applies to `(ind A B)` formulas. It attempts to refute the formula by
+recursively refuting *either* `A` or `B` (a logical OR). The implementation
+first checks if the `axiom-inconl` applies (for the `(ind A A)` case).
+
+Parameters:
+  - FORMULA: The formula to apply the rule to.
+  - KB: The knowledge base.
+
+Returns:
+  - The original `formula` if it is an `ind` formula and either sub-refutation succeeds.
+  - The result of `rule-dependence-l` if the formula is not of type `ind`.
+
+Side Effects:
+  - Increments `*refutation-rule-applications-count*`."
+  (declare (ignore kb))
   (incf *refutation-rule-applications-count*)
 
   ;; Axiom Check First: InconL - for (ind A A) - moved to axiom-inconl
@@ -138,11 +213,22 @@
 
 
 (defun rule-dependence-l (formula kb)
-  "Dependence Left Rule (rule dependenceL) - Formula-aware & SEQUENTIAL AND in Refutation (NOR dual).
-   Applies to (dep A B) formulae.
-   [Complexity Metric: refutation-rule-applications-count]
-   [Output: Concise - No verbose output]
-   MODIFIED: Now ONLY handles (dep A B) formulae."
+  "Implements the 'Dependence Left' (dependenceL) rule.
+
+This rule applies to `(dep A B)` formulas. It attempts to refute the formula by
+recursively refuting *both* `A` and `B` (a logical AND).
+
+Parameters:
+  - FORMULA: The formula to apply the rule to.
+  - KB: The knowledge base.
+
+Returns:
+  - The original `formula` if it is a `dep` formula and both sub-refutations succeed.
+  - The result of `rule-dual-l` if the formula is not of type `dep`.
+
+Side Effects:
+  - Increments `*refutation-rule-applications-count*`."
+  (declare (ignore kb))
   (incf *refutation-rule-applications-count*)
 
   (if (eq (formula-type formula) 'dep)
@@ -168,23 +254,29 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun initialize-refutation-knowledge-base ()
-  "Initializes the global *knowledge-base* and resets complexity counters for refutation."
+  "Initializes the refuter state by resetting the knowledge base and complexity counters."
   (setf *knowledge-base* nil)
   (reset-refutation-complexity-counters))
 
 (defun reset-refutation-complexity-counters ()
-  "Resets complexity counters for refutation."
+  "Resets the global refutation complexity counters to zero."
   (setf *refutation-axiom-applications-count* 0)
   (setf *refutation-rule-applications-count* 0))
 
 
 (defun run-refuter (formula)
-  "Runs the theorem refuter prototype with refutation threads on a given formula.
-   Orchestrates refutation attempts and determines the overall refuter result.
-   [Complexity Reporting: refutation-axiom-applications-count, refutation-rule-applications-count]
-   Now formula-aware: takes a formula as input.
-   Outputs formula if refuted, nil if not.
-   **MODIFIED: Refactored to dispatch to operator-specific rules. Incon and dual-incon base cases refined.**"
+  "Top-level function to run the theorem refuter on a single formula.
+
+This function serves as the main entry point for a refutation attempt. It
+initializes the state and then dispatches the formula to the appropriate
+axiom or rule based on its primary operator (`incon`, `ind`, `dep`, `dual`).
+
+Parameters:
+  - FORMULA: The formula to be refuted.
+
+Returns:
+  - The refuted formula on success.
+  - `NIL` if the formula cannot be refuted."
   (initialize-refutation-knowledge-base)
   (cond
     ((eq (formula-type formula) 'incon) (axiom-inconl formula))       ; Base case: incon - axiom check
@@ -198,6 +290,17 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun main ()
+  "The main entry point for demonstrating and testing the refuter.
+
+This function constructs several example formulas and runs the refuter on each
+one, printing the results to standard output. It serves as a test harness for
+the refuter's logic.
+
+Parameters:
+  - None.
+
+Returns:
+  - Nothing."
   (format t "Starting Formula-Aware Theorem Refuter Prototype (L-Rules Only - Operator-Specific Rules - Refined Incon/Dual-Incon).~%")
 
   ;; Example Formula Construction

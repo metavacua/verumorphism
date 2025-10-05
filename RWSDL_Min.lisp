@@ -73,7 +73,14 @@
 
 ;;; --- Timing Utility Function ---
 (defun measure-execution-time (function &rest args)
-  "Measures the execution time of a function call in milliseconds."
+  "Measures and returns the execution time of a given function in milliseconds.
+
+Parameters:
+  - FUNCTION: The function to be executed and timed.
+  - ARGS: A list of arguments to be passed to the function.
+
+Returns:
+  - The elapsed execution time in milliseconds."
   (let ((start-time (get-internal-real-time)))
     (apply function args)
     (let ((end-time (get-internal-real-time)))
@@ -82,11 +89,16 @@
 
 ;;; --- Utility Function: CPU-Bound Workload (Parameterizable) ---
 (defun cpu-intensive-workload (iterations)
-  "Simulates a CPU-bound workload for a given number of iterations.
-   **IMPORTANT:** This function is used in multithreaded operations to
-   represent the COMPUTATIONAL EFFORT of PARSING and EXECUTING weavex expressions
-   in a CONCURRENT setting using OS threads.  It is NOT just for benchmarking,
-   but to model the intended operational semantics of RWSDL-Min."
+  "Simulates a CPU-bound workload to model the computational cost of parsing
+and executing weavex expressions in a concurrent environment. This is fundamental
+to the multithreaded operational semantics, not just for benchmarking.
+
+Parameters:
+  - ITERATIONS: The number of iterations to perform in the loop.
+
+Returns:
+  - The result of the computation (the sum), used to ensure work is not
+    optimized away."
   (let ((sum 0))
     (dotimes (i iterations)
       (incf sum i))
@@ -94,13 +106,13 @@
 
 ;;; --- Numerical Operations for Weavex Algebra (Complex Numbers) ---
 (defun complex-conjugate (z)
-  "Returns the complex conjugate of a complex number.
-   In Weavex Algebra, this is a numerical operation on weavex states."
+  "Calculates the complex conjugate of a complex number `z`.
+In the Weavex Algebra, this represents a fundamental transformation on a weavex state."
   (complex (realpart z) (- (imagpart z))))
 
 (defun duality-op (z)
-  "Duality operation: i * conjugate(z).
-   Represents a core transformation within Weavex Algebra."
+  "Performs the duality operation on a weavex state `z`, defined as `i * conjugate(z)`.
+This is a core transformation in the system's logic."
   (* #C(0 1) (complex-conjugate z)))
 
 
@@ -111,55 +123,43 @@
 ;;; of the concurrent parsing/execution simulation.
 
 (defun and-thread-r-op-numerical (z1 z2)
-  "Numerical AND_Thread_R operation: Re(z1) * Re(z2).
-   Combines the proof thread information (Real parts) of two weavexes
-   using multiplication.  This is the CORE NUMERICAL LOGIC of AND_Thread_R."
+  "The numerical implementation of the AND_Thread_R operator.
+It computes the result by multiplying the real parts of the two input weavex states `z1` and `z2`."
   (* (realpart z1) (realpart z2)))
 
 (defun or-thread-r-op-numerical (z1 z2)
-  "Numerical OR_Thread_R operation: max(Re(z1), Re(z2)).
-   Combines the proof thread information (Real parts) of two weavexes
-   using maximum selection. This is the CORE NUMERICAL LOGIC of OR_Thread_R."
+  "The numerical implementation of the OR_Thread_R operator.
+It computes the result by taking the maximum of the real parts of `z1` and `z2`."
   (max (realpart z1) (realpart z2)))
 
 (defun and-thread-l-op-numerical (z1 z2)
-  "Numerical AND_Thread_L operation: (Im(z1) * Im(z2)) * i.
-   Combines the refutation thread information (Imaginary parts) of two weavexes
-   using multiplication and scaling by imaginary unit 'i'.
-   This is the CORE NUMERICAL LOGIC of AND_Thread_L."
+  "The numerical implementation of the AND_Thread_L operator.
+It computes the result by multiplying the imaginary parts of `z1` and `z2` and scaling by `i`."
   (* (* (imagpart z1) (imagpart z2)) #C(0 1)))
 
 (defun or-thread-l-op-numerical (z1 z2)
-  "Numerical OR_Thread_L operation: max(Im(z1), Im(z2)) * i.
-   Combines the refutation thread information (Imaginary parts) of two weavexes
-   using maximum selection and scaling by imaginary unit 'i'.
-   This is the CORE NUMERICAL LOGIC of OR_Thread_L."
+  "The numerical implementation of the OR_Thread_L operator.
+It computes the result by taking the maximum of the imaginary parts of `z1` and `z2` and scaling by `i`."
   (* (max (imagpart z1) (imagpart z2)) #C(0 1)))
 
 (defun independence-thread-r-op-numerical (z1 z2)
-  "Numerical INDEPENDENCE_Thread_R operation: Re(z1) + Re(z2).
-   Combines the proof thread information (Real parts) of two independent weavexes
-   using addition. This is the CORE NUMERICAL LOGIC of INDEPENDENCE_Thread_R."
+  "The numerical implementation of the INDEPENDENCE_Thread_R operator.
+It combines the proof information of two weavexes by adding their real parts."
   (+ (realpart z1) (realpart z2)))
 
 (defun independence-thread-l-op-numerical (z1 z2)
-  "Numerical INDEPENDENCE_Thread_L operation: (Im(z1) + Im(z2)) * i.
-   Combines the refutation thread information (Imaginary parts) of two independent weavexes
-   using addition and scaling by imaginary unit 'i'.
-   This is the CORE NUMERICAL LOGIC of INDEPENDENCE_Thread_L."
+  "The numerical implementation of the INDEPENDENCE_Thread_L operator.
+It combines the refutation information by adding the imaginary parts and scaling by `i`."
   (* (+ (imagpart z1) (imagpart z2)) #C(0 1)))
 
 (defun dependence-thread-r-op-numerical (z1 z2)
-  "Numerical DEPENDENCE_Thread_R operation: (Re(z1) + Re(z2)) / 2.
-   Combines the proof thread information (Real parts) of two dependent weavexes
-   using averaging. This is the CORE NUMERICAL LOGIC of DEPENDENCE_Thread_R."
+  "The numerical implementation of the DEPENDENCE_Thread_R operator.
+It combines the proof information by averaging the real parts."
   (/ (+ (realpart z1) (realpart z2)) 2.0))
 
 (defun dependence-thread-l-op-numerical (z1 z2)
-  "Numerical DEPENDENCE_Thread_L operation: ((Im(z1) + Im(z2)) / 2) * i.
-   Combines the refutation thread information (Imaginary parts) of two dependent weavexes
-   using averaging and scaling by imaginary unit 'i'.
-   This is the CORE NUMERICAL LOGIC of DEPENDENCE_Thread_L."
+  "The numerical implementation of the DEPENDENCE_Thread_L operator.
+It combines the refutation information by averaging the imaginary parts and scaling by `i`."
   (* (/ (+ (imagpart z1) (imagpart z2)) 2.0) #C(0 1)))
 
 
@@ -180,10 +180,17 @@
 
 
 (defun and-thread-r-op-mt (z1 z2)
-  "Multithreaded AND_Thread_R operation.
-   **Uses OS threads to simulate parallel parsing/execution** before applying
-   the CORE NUMERICAL LOGIC of AND_Thread_R.  The threads represent actual
-   concurrent processing paths."
+  "The multithreaded implementation of the AND_Thread_R operator.
+It simulates the concurrent parsing and execution of sub-expressions by spawning
+two OS threads that perform a CPU-intensive task before applying the core
+numerical logic of the operator.
+
+Parameters:
+  - Z1: The first complex number weavex state.
+  - Z2: The second complex number weavex state.
+
+Returns:
+  - The resulting complex number weavex state."
   (let ((result #C(0.0 0.0)) ; Initialize result to complex 0
         (thread1 nil)
         (thread2 nil)
@@ -197,7 +204,8 @@
     result))
 
 (defun or-thread-r-op-mt (z1 z2)
-  "Multithreaded OR_Thread_R operation. **Uses OS threads for parallel parsing/execution simulation.**"
+  "The multithreaded implementation of the OR_Thread_R operator.
+Simulates concurrent execution before applying the numerical logic."
   (let ((result #C(0.0 0.0))
         (thread1 nil)
         (thread2 nil)
@@ -210,7 +218,8 @@
     result))
 
 (defun and-thread-l-op-mt (z1 z2)
-  "Multithreaded AND_Thread_L operation. **Uses OS threads for parallel parsing/execution simulation.**"
+  "The multithreaded implementation of the AND_Thread_L operator.
+Simulates concurrent execution before applying the numerical logic."
   (let ((result #C(0.0 0.0))
         (thread1 nil)
         (thread2 nil)
@@ -223,7 +232,8 @@
     result))
 
 (defun or-thread-l-op-mt (z1 z2)
-  "Multithreaded OR_Thread_L operation. **Uses OS threads for parallel parsing/execution simulation.**"
+  "The multithreaded implementation of the OR_Thread_L operator.
+Simulates concurrent execution before applying the numerical logic."
   (let ((result #C(0.0 0.0))
         (thread1 nil)
         (thread2 nil)
@@ -236,7 +246,8 @@
     result))
 
 (defun independence-thread-r-op-mt (z1 z2)
-  "Multithreaded INDEPENDENCE_Thread_R operation. **Uses OS threads for parallel parsing/execution simulation.**"
+  "The multithreaded implementation of the INDEPENDENCE_Thread_R operator.
+Simulates concurrent execution before applying the numerical logic."
   (let ((result #C(0.0 0.0))
         (thread1 nil)
         (thread2 nil)
@@ -249,7 +260,8 @@
     result))
 
 (defun independence-thread-l-op-mt (z1 z2)
-  "Multithreaded INDEPENDENCE_Thread_L operation. **Uses OS threads for parallel parsing/execution simulation.**"
+  "The multithreaded implementation of the INDEPENDENCE_Thread_L operator.
+Simulates concurrent execution before applying the numerical logic."
   (let ((result #C(0.0 0.0))
         (thread1 nil)
         (thread2 nil)
@@ -262,7 +274,8 @@
     result))
 
 (defun dependence-thread-r-op-mt (z1 z2)
-  "Multithreaded DEPENDENCE_Thread_R operation. **Uses OS threads for parallel parsing/execution simulation.**"
+  "The multithreaded implementation of the DEPENDENCE_Thread_R operator.
+Simulates concurrent execution before applying the numerical logic."
   (let ((result #C(0.0 0.0))
         (thread1 nil)
         (thread2 nil)
@@ -275,7 +288,8 @@
     result))
 
 (defun dependence-thread-l-op-mt (z1 z2)
-  "Multithreaded DEPENDENCE_Thread_L operation. **Uses OS threads for parallel parsing/execution simulation.**"
+  "The multithreaded implementation of the DEPENDENCE_Thread_L operator.
+Simulates concurrent execution before applying the numerical logic."
   (let ((result #C(0.0 0.0))
         (thread1 nil)
         (thread2 nil)
@@ -294,18 +308,33 @@
 ;;; are currently defined numerically.
 
 (defun rwsdl-min-axiom-con-r (expression thread-type implementation-type)
-  "Axiom for 'CON' (Consistency).
-   Represents the consistent state. Dispatches to numerical implementation.
-   'CON' evaluates differently based on the thread type."
+  "The main dispatcher for the 'CON' axiom.
+It calls the numerical implementation, as axioms are fundamental and do not have
+a separate multithreaded simulation.
+
+Parameters:
+  - EXPRESSION: The expression to evaluate (should be 'CON').
+  - THREAD-TYPE: The thread context (:proof_closure_thread, etc.).
+  - IMPLEMENTATION-TYPE: The implementation to use (:numerical or :multithreaded).
+
+Returns:
+  - A complex number representing the weavex state."
   (case implementation-type
     (:numerical (rwsdl-min-axiom-con-r-numerical expression thread-type))
     (:multithreaded (rwsdl-min-axiom-con-r-numerical expression thread-type)) ; Numerical axiom still applies for CON
     (otherwise (error "Invalid implementation type: ~a" implementation-type))))
 
 (defun rwsdl-min-axiom-con-r-numerical (expression thread-type)
-  "Numerical Axiom for 'CON' (Consistency) in Proof and Meta-Closure Threads.
-   Numerically defines the value of 'CON' based on the thread type.
-   Real part represents proof thread information, Imaginary part refutation."
+  "The numerical implementation of the 'CON' axiom.
+It returns a complex number representing the state of 'CON' based on the
+current thread type.
+
+Parameters:
+  - EXPRESSION: The expression to evaluate.
+  - THREAD-TYPE: The current thread context.
+
+Returns:
+  - #C(1.0 0.0) for proof/meta threads, #C(0.0 0.0) otherwise."
   (if (eq expression 'CON)
       (case thread-type
         (:proof_closure_thread #C(1.0 0.0))  ; CON -> 1 in proof thread (strong consistency)
@@ -316,18 +345,32 @@
         (otherwise #C(0.0 0.0)))))        ; No match otherwise -> 0
 
 (defun rwsdl-min-axiom-incon-l (expression thread-type implementation-type)
-  "Axiom for 'INCON' (Inconsistency).
-   Represents the inconsistent state. Dispatches to numerical implementation.
-   'INCON' evaluates differently based on the thread type."
+  "The main dispatcher for the 'INCON' axiom.
+It calls the numerical implementation.
+
+Parameters:
+  - EXPRESSION: The expression to evaluate (should be 'INCON').
+  - THREAD-TYPE: The thread context.
+  - IMPLEMENTATION-TYPE: The implementation to use.
+
+Returns:
+  - A complex number representing the weavex state."
   (case implementation-type
     (:numerical (rwsdl-min-axiom-incon-l-numerical expression thread-type))
     (:multithreaded (rwsdl-min-axiom-incon-l-numerical expression thread-type)) ; Numerical axiom still applies for INCON
     (otherwise (error "Invalid implementation type: ~a" implementation-type))))
 
 (defun rwsdl-min-axiom-incon-l-numerical (expression thread-type)
-  "Numerical Axiom for 'INCON' (Inconsistency) in Refutation and Meta-Closure Threads.
-   Numerically defines the value of 'INCON' based on the thread type.
-   Imaginary part represents refutation thread information, Real part proof."
+  "The numerical implementation of the 'INCON' axiom.
+It returns a complex number representing the state of 'INCON' based on the
+current thread type.
+
+Parameters:
+  - EXPRESSION: The expression to evaluate.
+  - THREAD-TYPE: The current thread context.
+
+Returns:
+  - #C(0.0 1.0) for refutation/meta threads, #C(0.0 0.0) otherwise."
   (if (eq expression 'INCON)
       (case thread-type
         (:refutation_closure_thread #C(0.0 1.0)) ; INCON -> i in refutation thread (strong inconsistency)
@@ -344,16 +387,17 @@
 ;;; based on the 'implementation-type'.
 
 (defun rwsdl-min-rule-or-thread-r (expression thread-type implementation-type)
-  "Rule for 'OR_Thread_R'.
-   Represents a right-threaded OR operation. Dispatches to numerical or multithreaded implementation."
+  "The main dispatcher for the 'OR_Thread_R' rule.
+It selects either the numerical or multithreaded implementation based on `implementation-type`."
   (case implementation-type
     (:numerical (rwsdl-min-rule-or-thread-r-numerical expression thread-type))
     (:multithreaded (rwsdl-min-rule-or-thread-r-mt expression thread-type))
     (otherwise (error "Invalid implementation type: ~a" implementation-type))))
 
 (defun rwsdl-min-rule-or-thread-r-numerical (expression thread-type)
-  "Numerical Rule for 'OR_Thread_R' in Proof and Meta-Closure Threads.
-   Numerically evaluates 'OR_Thread_R' using the numerical 'or-thread-r-op-numerical' operation."
+  "The numerical implementation of the 'OR_Thread_R' rule.
+It recursively evaluates sub-expressions and combines them using the
+`or-thread-r-op-numerical` function."
   (if (and (listp expression) (eq (car expression) 'OR_Thread_R) (cadr expression) (caddr expression))
       (let ((a (cadr expression))
             (b (caddr expression)))
@@ -369,10 +413,9 @@
         (otherwise #C(0.0 0.0)))))        ; Default to 0 otherwise
 
 (defun rwsdl-min-rule-or-thread-r-mt (expression thread-type)
-  "Multithreaded Rule for 'OR_Thread_R' in Proof and Meta-Closure Threads.
-   **Multithreaded execution of 'OR_Thread_R' using OS threads.**
-   Simulates parallel parsing/execution of sub-expressions using OS threads
-   before applying the CORE NUMERICAL LOGIC of OR_Thread_R."
+  "The multithreaded implementation of the 'OR_Thread_R' rule.
+It simulates concurrent execution of sub-expressions before combining them
+with the `or-thread-r-op-mt` function."
   (if (and (listp expression) (eq (car expression) 'OR_Thread_R) (cadr expression) (caddr expression))
       (let ((a (cadr expression))
             (b (caddr expression)))
@@ -389,16 +432,16 @@
 
 
 (defun rwsdl-min-rule-and-thread-r (expression thread-type implementation-type)
-  "Rule for 'AND_Thread_R'.
-   Represents a right-threaded AND operation. Dispatches to numerical or multithreaded implementation."
+  "The main dispatcher for the 'AND_Thread_R' rule.
+Selects the numerical or multithreaded implementation."
   (case implementation-type
     (:numerical (rwsdl-min-rule-and-thread-r-numerical expression thread-type))
     (:multithreaded (rwsdl-min-rule-and-thread-r-mt expression thread-type))
     (otherwise (error "Invalid implementation type: ~a" implementation-type))))
 
 (defun rwsdl-min-rule-and-thread-r-numerical (expression thread-type)
-  "Numerical Rule for 'AND_Thread_R' in Proof and Meta-Closure Threads.
-   Numerically evaluates 'AND_Thread_R' using the numerical 'and-thread-r-op-numerical' operation."
+  "The numerical implementation of the 'AND_Thread_R' rule.
+Combines sub-expressions using `and-thread-r-op-numerical`."
   (if (and (listp expression) (eq (car expression) 'AND_Thread_R) (cadr expression) (caddr expression))
       (let ((a (cadr expression))
             (b (caddr expression)))
@@ -414,10 +457,8 @@
         (otherwise #C(0.0 0.0)))))        ; Default to 0 otherwise
 
 (defun rwsdl-min-rule-and-thread-r-mt (expression thread-type)
-  "Multithreaded Rule for 'AND_Thread_R' in Proof and Meta-Closure Threads.
-   **Multithreaded execution of 'AND_Thread_R' using OS threads.**
-   Simulates parallel parsing/execution of sub-expressions using OS threads
-   before applying the CORE NUMERICAL LOGIC of AND_Thread_R."
+  "The multithreaded implementation of the 'AND_Thread_R' rule.
+Simulates concurrent execution before combining with `and-thread-r-op-mt`."
   (if (and (listp expression) (eq (car expression) 'AND_Thread_R) (cadr expression) (caddr expression))
       (let ((a (cadr expression))
             (b (caddr expression)))
@@ -434,17 +475,16 @@
 
 
 (defun rwsdl-min-rule-duality-r (expression thread-type implementation-type)
-  "Rule for 'DUALITY_R'.
-   Represents a right-threaded DUALITY operation. Dispatches to numerical implementation
-   as DUALITY is currently defined as a numerical operation."
+  "The main dispatcher for the 'DUALITY_R' rule.
+Currently, it always uses the numerical implementation."
   (case implementation-type
     (:numerical (rwsdl-min-rule-duality-r-numerical expression thread-type))
     (:multithreaded (rwsdl-min-rule-duality-r-numerical expression thread-type)) ; Duality is still numerical op
     (otherwise (error "Invalid implementation type: ~a" implementation-type))))
 
 (defun rwsdl-min-rule-duality-r-numerical (expression thread-type)
-  "Numerical Rule for 'DUALITY_R' in Proof and Meta-Closure Threads.
-   Numerically evaluates 'DUALITY_R' using the numerical 'duality-op' operation."
+  "The numerical implementation of the 'DUALITY_R' rule.
+It evaluates the sub-expression in a meta-closure thread and applies the `duality-op`."
   (if (and (listp expression) (eq (car expression) 'DUALITY_R) (cadr expression))
       (let ((a (cadr expression)))
         (duality-op (rwsdl-min-self-interpret a :meta_closure_thread :numerical))) ; Meta-closure thread for duality, numerical operation
@@ -454,16 +494,14 @@
 
 
 (defun rwsdl-min-rule-or-thread-l (expression thread-type implementation-type)
-  "Rule for 'OR_Thread_L'.
-   Represents a left-threaded OR operation. Dispatches to numerical or multithreaded implementation."
+  "The main dispatcher for the 'OR_Thread_L' rule."
   (case implementation-type
     (:numerical (rwsdl-min-rule-or-thread-l-numerical expression thread-type))
     (:multithreaded (rwsdl-min-rule-or-thread-l-mt expression thread-type))
     (otherwise (error "Invalid implementation type: ~a" implementation-type))))
 
 (defun rwsdl-min-rule-or-thread-l-numerical (expression thread-type)
-  "Numerical Rule for 'OR_Thread_L' in Refutation and Meta-Closure Threads.
-   Numerically evaluates 'OR_Thread_L' using the numerical 'or-thread-l-op-numerical' operation."
+  "The numerical implementation of the 'OR_Thread_L' rule."
   (if (and (listp expression) (eq (car expression) 'OR_Thread_L) (cadr expression) (caddr expression))
       (let ((a (cadr expression))
             (b (caddr expression)))
@@ -479,10 +517,7 @@
         (otherwise #C(0.0 0.0)))))        ; Default to 0 otherwise
 
 (defun rwsdl-min-rule-or-thread-l-mt (expression thread-type)
-  "Multithreaded Rule for 'OR_Thread_L' in Refutation and Meta-Closure Threads.
-   **Multithreaded execution of 'OR_Thread_L' using OS threads.**
-   Simulates parallel parsing/execution of sub-expressions using OS threads
-   before applying the CORE NUMERICAL LOGIC of OR_Thread_L."
+  "The multithreaded implementation of the 'OR_Thread_L' rule."
   (if (and (listp expression) (eq (car expression) 'OR_Thread_L) (cadr expression) (caddr expression))
       (let ((a (cadr expression))
             (b (caddr expression)))
@@ -499,16 +534,14 @@
 
 
 (defun rwsdl-min-rule-and-thread-l (expression thread-type implementation-type)
-  "Rule for 'AND_Thread_L'.
-   Represents a left-threaded AND operation. Dispatches to numerical or multithreaded implementation."
+  "The main dispatcher for the 'AND_Thread_L' rule."
   (case implementation-type
     (:numerical (rwsdl-min-rule-and-thread-l-numerical expression thread-type))
     (:multithreaded (rwsdl-min-rule-and-thread-l-mt expression thread-type))
     (otherwise (error "Invalid implementation type: ~a" implementation-type))))
 
 (defun rwsdl-min-rule-and-thread-l-numerical (expression thread-type)
-  "Numerical Rule for 'AND_Thread_L' in Refutation and Meta-Closure Threads.
-   Numerically evaluates 'AND_Thread_L' using the numerical 'and-thread-l-op-numerical' operation."
+  "The numerical implementation of the 'AND_Thread_L' rule."
   (if (and (listp expression) (eq (car expression) 'AND_Thread_L) (cadr expression) (caddr expression))
       (let ((a (cadr expression))
             (b (caddr expression)))
@@ -524,10 +557,7 @@
         (otherwise #C(0.0 0.0)))))        ; Default to 0 otherwise
 
 (defun rwsdl-min-rule-and-thread-l-mt (expression thread-type)
-  "Multithreaded Rule for 'AND_Thread_L' in Refutation and Meta-Closure Threads.
-   **Multithreaded execution of 'AND_Thread_L' using OS threads.**
-   Simulates parallel parsing/execution of sub-expressions using OS threads
-   before applying the CORE NUMERICAL LOGIC of AND_Thread_L."
+  "The multithreaded implementation of the 'AND_Thread_L' rule."
   (if (and (listp expression) (eq (car expression) 'AND_Thread_L) (cadr expression) (caddr expression))
       (let ((a (cadr expression))
             (b (caddr expression)))
@@ -544,17 +574,16 @@
 
 
 (defun rwsdl-min-rule-duality-l (expression thread-type implementation-type)
-  "Rule for 'DUALITY_L'.
-   Represents a left-threaded DUALITY operation. Dispatches to numerical implementation
-   as DUALITY is currently defined as a numerical operation."
+  "The main dispatcher for the 'DUALITY_L' rule.
+Currently, it always uses the numerical implementation."
   (case implementation-type
     (:numerical (rwsdl-min-rule-duality-l-numerical expression thread-type))
     (:multithreaded (rwsdl-min-rule-duality-l-numerical expression thread-type)) ; Duality is still numerical op
     (otherwise (error "Invalid implementation type: ~a" implementation-type))))
 
 (defun rwsdl-min-rule-duality-l-numerical (expression thread-type)
-  "Numerical Rule for 'DUALITY_L' in Refutation and Meta-Closure Threads.
-   Numerically evaluates 'DUALITY_L' using the numerical 'duality-op' operation."
+  "The numerical implementation of the 'DUALITY_L' rule.
+It evaluates the sub-expression in a meta-closure thread and applies the `duality-op`."
   (if (and (listp expression) (eq (car expression) 'DUALITY_L) (cadr expression))
       (let ((a (cadr expression)))
         (duality-op (rwsdl-min-self-interpret a :meta_closure_thread :numerical))) ; Meta-closure thread for duality, numerical operation
@@ -564,16 +593,14 @@
 
 
 (defun rwsdl-min-rule-independence-thread-r (expression thread-type implementation-type)
-  "Rule for 'INDEPENDENCE_Thread_R'.
-   Represents a right-threaded INDEPENDENCE operation. Dispatches to numerical or multithreaded implementation."
+  "The main dispatcher for the 'INDEPENDENCE_Thread_R' rule."
   (case implementation-type
     (:numerical (rwsdl-min-rule-independence-thread-r-numerical expression thread-type))
     (:multithreaded (rwsdl-min-rule-independence-thread-r-mt expression thread-type))
     (otherwise (error "Invalid implementation type: ~a" implementation-type))))
 
 (defun rwsdl-min-rule-independence-thread-r-numerical (expression thread-type)
-  "Numerical Rule for 'INDEPENDENCE_Thread_R' in Proof and Meta-Closure Threads.
-   Numerically evaluates 'INDEPENDENCE_Thread_R' using the numerical 'independence-thread-r-op-numerical' operation."
+  "The numerical implementation of the 'INDEPENDENCE_Thread_R' rule."
   (if (and (listp expression) (eq (car expression) 'INDEPENDENCE_Thread_R) (cadr expression) (caddr expression))
       (let ((a (cadr expression))
             (b (caddr expression)))
@@ -589,10 +616,7 @@
         (otherwise #C(0.0 0.0)))))        ; Default to 0 otherwise
 
 (defun rwsdl-min-rule-independence-thread-r-mt (expression thread-type)
-  "Multithreaded Rule for 'INDEPENDENCE_Thread_R' in Proof and Meta-Closure Threads.
-   **Multithreaded execution of 'INDEPENDENCE_Thread_R' using OS threads.**
-   Simulates parallel parsing/execution of sub-expressions using OS threads
-   before applying the CORE NUMERICAL LOGIC of INDEPENDENCE_Thread_R."
+  "The multithreaded implementation of the 'INDEPENDENCE_Thread_R' rule."
   (if (and (listp expression) (eq (car expression) 'INDEPENDENCE_Thread_R) (cadr expression) (caddr expression))
       (let ((a (cadr expression))
             (b (caddr expression)))
@@ -609,16 +633,14 @@
 
 
 (defun rwsdl-min-rule-independence-thread-l (expression thread-type implementation-type)
-  "Rule for 'INDEPENDENCE_Thread_L'.
-   Represents a left-threaded INDEPENDENCE operation. Dispatches to numerical or multithreaded implementation."
+  "The main dispatcher for the 'INDEPENDENCE_Thread_L' rule."
   (case implementation-type
     (:numerical (rwsdl-min-rule-independence-thread-l-numerical expression thread-type))
     (:multithreaded (rwsdl-min-rule-independence-thread-l-mt expression thread-type))
     (otherwise (error "Invalid implementation type: ~a" implementation-type))))
 
 (defun rwsdl-min-rule-independence-thread-l-numerical (expression thread-type)
-  "Numerical Rule for 'INDEPENDENCE_Thread_L' in Refutation and Meta-Closure Threads.
-   Numerically evaluates 'INDEPENDENCE_Thread_L' using the numerical 'independence-thread-l-op-numerical' operation."
+  "The numerical implementation of the 'INDEPENDENCE_Thread_L' rule."
   (if (and (listp expression) (eq (car expression) 'INDEPENDENCE_Thread_L) (cadr expression) (caddr expression))
       (let ((a (cadr expression))
             (b (caddr expression)))
@@ -634,10 +656,7 @@
         (otherwise #C(0.0 0.0)))))        ; Default to 0 otherwise
 
 (defun rwsdl-min-rule-independence-thread-l-mt (expression thread-type)
-  "Multithreaded Rule for 'INDEPENDENCE_Thread_L' in Refutation and Meta-Closure Threads.
-   **Multithreaded execution of 'INDEPENDENCE_Thread_L' using OS threads.**
-   Simulates parallel parsing/execution of sub-expressions using OS threads
-   before applying the CORE NUMERICAL LOGIC of INDEPENDENCE_Thread_L."
+  "The multithreaded implementation of the 'INDEPENDENCE_Thread_L' rule."
   (if (and (listp expression) (eq (car expression) 'INDEPENDENCE_Thread_L) (cadr expression) (caddr expression))
       (let ((a (cadr expression))
             (b (caddr expression)))
@@ -654,16 +673,14 @@
 
 
 (defun rwsdl-min-rule-dependence-thread-r (expression thread-type implementation-type)
-  "Rule for 'DEPENDENCE_Thread_R'.
-   Represents a right-threaded DEPENDENCE operation. Dispatches to numerical or multithreaded implementation."
+  "The main dispatcher for the 'DEPENDENCE_Thread_R' rule."
   (case implementation-type
     (:numerical (rwsdl-min-rule-dependence-thread-r-numerical expression thread-type))
     (:multithreaded (rwsdl-min-rule-dependence-thread-r-mt expression thread-type))
     (otherwise (error "Invalid implementation type: ~a" implementation-type))))
 
 (defun rwsdl-min-rule-dependence-thread-r-numerical (expression thread-type)
-  "Numerical Rule for 'DEPENDENCE_Thread_R' in Proof and Meta-Closure Threads.
-   Numerically evaluates 'DEPENDENCE_Thread_R' using the numerical 'dependence-thread-r-op-numerical' operation."
+  "The numerical implementation of the 'DEPENDENCE_Thread_R' rule."
   (if (and (listp expression) (eq (car expression) 'DEPENDENCE_Thread_R) (cadr expression) (caddr expression))
       (let ((a (cadr expression))
             (b (caddr expression)))
@@ -679,10 +696,7 @@
         (otherwise #C(0.0 0.0)))))        ; Default to 0 otherwise
 
 (defun rwsdl-min-rule-dependence-thread-r-mt (expression thread-type)
-  "Multithreaded Rule for 'DEPENDENCE_Thread_R' in Proof and Meta-Closure Threads.
-   **Multithreaded execution of 'DEPENDENCE_Thread_R' using OS threads.**
-   Simulates parallel parsing/execution of sub-expressions using OS threads
-   before applying the CORE NUMERICAL LOGIC of DEPENDENCE_Thread_R."
+  "The multithreaded implementation of the 'DEPENDENCE_Thread_R' rule."
   (if (and (listp expression) (eq (car expression) 'DEPENDENCE_Thread_R) (cadr expression) (caddr expression))
       (let ((a (cadr expression))
             (b (caddr expression)))
@@ -699,16 +713,14 @@
 
 
 (defun rwsdl-min-rule-dependence-thread-l (expression thread-type implementation-type)
-  "Rule for 'DEPENDENCE_Thread_L'.
-   Represents a left-threaded DEPENDENCE operation. Dispatches to numerical or multithreaded implementation."
+  "The main dispatcher for the 'DEPENDENCE_Thread_L' rule."
   (case implementation-type
     (:numerical (rwsdl-min-rule-dependence-thread-l-numerical expression thread-type))
     (:multithreaded (rwsdl-min-rule-dependence-thread-l-mt expression thread-type))
     (otherwise (error "Invalid implementation type: ~a" implementation-type))))
 
 (defun rwsdl-min-rule-dependence-thread-l-numerical (expression thread-type)
-  "Numerical Rule for 'DEPENDENCE_Thread_L' in Refutation and Meta-Closure Threads.
-   Numerically evaluates 'DEPENDENCE_Thread_L' using the numerical 'dependence-thread-l-op-numerical' operation."
+  "The numerical implementation of the 'DEPENDENCE_Thread_L' rule."
   (if (and (listp expression) (eq (car expression) 'DEPENDENCE_Thread_L) (cadr expression) (caddr expression))
       (let ((a (cadr expression))
             (b (caddr expression)))
@@ -724,10 +736,7 @@
         (otherwise #C(0.0 0.0)))))        ; Default to 0 otherwise
 
 (defun rwsdl-min-rule-dependence-thread-l-mt (expression thread-type)
-  "Multithreaded Rule for 'DEPENDENCE_Thread_L' in Refutation and Meta-Closure Threads.
-   **Multithreaded execution of 'DEPENDENCE_Thread_L' using OS threads.**
-   Simulates parallel parsing/execution of sub-expressions using OS threads
-   before applying the CORE NUMERICAL LOGIC of DEPENDENCE_Thread_L."
+  "The multithreaded implementation of the 'DEPENDENCE_Thread_L' rule."
   (if (and (listp expression) (eq (car expression) 'DEPENDENCE_Thread_L) (cadr expression) (caddr expression))
       (let ((a (cadr expression))
             (b (caddr expression)))
@@ -746,9 +755,10 @@
 
 ;;; Minimal Self-Interpretation (modified to handle :meta_closure_thread type and implementation type dispatch)
 (defun rwsdl-min-self-interpret (expression thread-type implementation-type)
-  "Self-interpretation function, the core weaver of RWSDL-Min.
-   Dispatches to axioms and rules based on the expression type,
-   thread type (proof, refutation, meta), and implementation type (numerical, multithreaded).
+  "The core weaver function that interprets and dispatches weavex expressions.
+It selects the appropriate axiom or rule based on the expression's structure
+and the specified thread and implementation types. If no rule matches, it
+returns a complex zero, representing a 'no-closure' state.
 
    **IMPORTANT SEMANTIC CLARIFICATION:**
    This function is the central WEAVER in RWSDL-Min. It interprets weavex expressions
@@ -786,26 +796,31 @@
 ;;; thread types and implementation types.
 
 (defun rwsdl-min-evaluate (expression thread-type implementation-type)
-  "Evaluates an expression in the specified thread type and implementation.
-   Dispatches to numerical or multithreaded evaluation based on implementation-type."
+  "The main evaluation function that dispatches to either numerical or
+multithreaded evaluation based on the `implementation-type` parameter.
+
+Parameters:
+  - EXPRESSION: The weavex expression to evaluate.
+  - THREAD-TYPE: The thread context.
+  - IMPLEMENTATION-TYPE: The desired implementation (:numerical or :multithreaded).
+
+Returns:
+  - The result of the evaluation (a complex number)."
   (case implementation-type
     (:numerical (rwsdl-min-evaluate-numerical expression thread-type)) ; Dispatch to numerical evaluation
     (:multithreaded (rwsdl-min-evaluate-multithreaded expression thread-type)) ; Dispatch to multithreaded evaluation
     (otherwise (error "Invalid implementation type: ~a" implementation-type)))) ; Error for invalid implementation type
 
 (defun rwsdl-min-evaluate-numerical (expression thread-type)
-  "Numerically evaluates an expression in the specified thread type.
-   Uses the numerical implementation for all operations.
-   This is the FASTEST evaluation path, using direct numerical computations."
+  "Performs a purely numerical evaluation of a weavex expression.
+This is the fastest evaluation path, as it avoids OS thread simulation."
   (rwsdl-min-self-interpret expression thread-type :numerical)) ; Call self-interpret with numerical implementation
 
 (defun rwsdl-min-evaluate-multithreaded (expression thread-type)
-  "Multithreaded evaluates an expression in the specified thread type.
-   **Simulates concurrent parsing and execution using OS threads.**
-   Uses the multithreaded implementation for applicable operations,
-   and numerical implementation for axioms and DUALITY operations (where multithreading
-   is not currently simulated).  This path is designed to model concurrent behavior,
-   NOT for optimal performance."
+  "Performs a multithreaded evaluation of a weavex expression.
+This simulates the concurrent parsing and execution of sub-expressions using
+OS threads and is intended to model the system's behavior in a parallel
+computing environment, not for performance optimization."
   (rwsdl-min-self-interpret expression thread-type :multithreaded)) ; Call self-interpret with multithreaded implementation
 
 
@@ -815,26 +830,46 @@
 ;;; a chosen implementation type (numerical or multithreaded).
 
 (defun rwsdl-min-proof-closure-thread (expression implementation-type)
-  "Evaluates expression in a proof closure thread with specified implementation.
-   Entry point for proof-focused evaluation.  Focuses on consistency."
+  "A convenience wrapper to evaluate an expression in a proof closure thread.
+
+Parameters:
+  - EXPRESSION: The weavex expression.
+  - IMPLEMENTATION-TYPE: The implementation to use.
+
+Returns:
+  - The result of the evaluation."
   (rwsdl-min-evaluate expression :proof_closure_thread implementation-type)) ; Evaluate in proof thread
 
 (defun rwsdl-min-refutation-closure-thread (expression implementation-type)
-  "Evaluates expression in a refutation closure thread with specified implementation.
-   Entry point for refutation-focused evaluation. Focuses on inconsistency."
+  "A convenience wrapper to evaluate an expression in a refutation closure thread.
+
+Parameters:
+  - EXPRESSION: The weavex expression.
+  - IMPLEMENTATION-TYPE: The implementation to use.
+
+Returns:
+  - The result of the evaluation."
   (rwsdl-min-evaluate expression :refutation_closure_thread implementation-type)) ; Evaluate in refutation thread
 
 (defun rwsdl-min-meta-closure-thread (expression implementation-type)
-  "Evaluates expression in a meta-closure thread with specified implementation.
-   Entry point for meta-level evaluation.  Provides a broader context."
+  "A convenience wrapper to evaluate an expression in a meta-closure thread.
+
+Parameters:
+  - EXPRESSION: The weavex expression.
+  - IMPLEMENTATION-TYPE: The implementation to use.
+
+Returns:
+  - The result of the evaluation."
   (rwsdl-min-evaluate expression :meta_closure_thread implementation-type)) ; Evaluate in meta thread
 
 
 ;;; Bootstrap Loop Test (modified to test meta-closure threads, implementation types and new closure outputs)
 (defun rwsdl-min-bootstrap-loop-test ()
-  "Tests RWSDL-Min with different thread types, implementations and expressions, and measures performance.
-   Systematically evaluates a range of expressions across proof, refutation, and meta threads,
-   using both numerical and multithreaded implementations.
+  "The main testing function for the RWSDL-Min system.
+It systematically evaluates a list of test expressions across all thread types
+and both implementation types (:numerical and :multithreaded). It measures
+the execution time for each evaluation and prints a formatted table comparing
+the performance and results.
 
    **Performance Metrics are crucial for understanding the computational cost
    of simulating concurrent parsing/execution using OS threads

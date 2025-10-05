@@ -12,8 +12,23 @@
 
 ;; --- Helper Function: Load Quicklisp ---
 (defun load-quicklisp (&key quicklisp-setup-path)
-  "Loads Quicklisp, using the provided path or defaulting to ~/quicklisp/setup.lisp.
-   Signals an error if the setup file is not found or loading fails."
+  "Loads Quicklisp into the current Lisp session.
+This function locates and loads the Quicklisp setup file, which is essential for
+managing project dependencies. It can use a user-provided path or default to
+'~/quicklisp/setup.lisp'. It signals a fatal error if the setup file cannot be
+found or loaded.
+
+Parameters:
+  - QUICKLISP-SETUP-PATH (Keyword, Optional): A pathname object or a string
+    specifying the location of the 'setup.lisp' file. If nil, the function
+    searches the default location.
+
+Returns:
+  - T on successful loading.
+
+Side Effects:
+  - Loads the Quicklisp system into the Lisp image.
+  - Prints informational and error messages to the standard and error outputs."
   (let ((ql-setup-path
           (if quicklisp-setup-path
               quicklisp-setup-path
@@ -52,8 +67,19 @@
 
 ;; --- Helper Function: Load Required Libraries ---
 (defun load-required-libraries ()
-  "Loads necessary libraries (Hunchentoot, Jonathan) using Quicklisp.
-   Signals an error if loading fails."
+  "Loads the project's core dependencies (Hunchentoot and Jonathan) using Quicklisp.
+This function assumes Quicklisp has already been loaded. It uses `ql:quickload`
+to fetch and load the required libraries. Signals a fatal error if loading fails.
+
+Parameters:
+  - None.
+
+Returns:
+  - T on successful loading.
+
+Side Effects:
+  - Loads the Hunchentoot and Jonathan libraries into the Lisp image.
+  - Prints informational and error messages."
   (format t "Loading required libraries (Hunchentoot, Jonathan) using Quicklisp...~%")
   (handler-case
       (ql:quickload '(:hunchentoot :jonathan))
@@ -67,10 +93,20 @@
 
 ;; --- Helper Function: Load Refuter API File ---
 (defun load-refuter-api-file (&key api-file-path)
-  "Loads the refuter-api.lisp file, using the provided path or defaulting to
-   'refuter-api.lisp' in the directory of the loading script.
-   Returns the final resolved path of the loaded file.
-   Signals an error if the file is not found or loading fails."
+  "Loads the main application file, `refuter-api.lisp`.
+This function determines the file's path, defaulting to a location relative to
+this setup script if no explicit path is provided. It ensures the file exists
+before attempting to load it and signals a fatal error on failure.
+
+Parameters:
+  - API-FILE-PATH (Keyword, Optional): An explicit path to the `refuter-api.lisp` file.
+    If nil, it defaults to looking in the same directory as this loader script.
+
+Returns:
+  - The fully resolved, absolute pathname of the loaded API file.
+
+Side Effects:
+  - Loads the `refuter-api.lisp` file into the Lisp image."
   ;; Determine the path to your refuter-api.lisp file
   (let ((api-file-final-path
           (if api-file-path
@@ -103,8 +139,20 @@
 
 ;; --- Helper Function: Set API File Path Global ---
 (defun set-api-file-path-global (api-file-path)
-  "Dynamically finds the REFUTER-API package and *REFUTER-API-FILE-PATH* symbol
-   and sets its value. Signals an error if the package or symbol is not found."
+  "Sets the `*refuter-api-file-path*` global variable within the `refuter-api` package.
+After the API file is loaded, this function dynamically finds the `refuter-api`
+package and the `*refuter-api-file-path*` symbol within it. It then sets this
+variable to the provided path, which is crucial for the `restart-refuter-api`
+function to work correctly.
+
+Parameters:
+  - API-FILE-PATH: The absolute pathname of the loaded API file.
+
+Returns:
+  - T on success.
+
+Side Effects:
+  - Modifies the value of the `refuter-api:*refuter-api-file-path*` variable."
   ;; Ensure the refuter-api package exists before trying to access its symbol
   (let ((refuter-api-package (find-package :refuter-api)))
     (unless refuter-api-package
@@ -131,8 +179,18 @@
 
 ;; --- Helper Function: Switch to Refuter API Package ---
 (defun switch-to-refuter-api-package ()
-  "Switches the current package to #:REFUTER-API.
-   Signals an error if the package does not exist."
+  "Switches the current Lisp package to `:refuter-api`.
+This makes it convenient for the user to interact with the API's exported
+functions directly from the REPL after the setup is complete.
+
+Parameters:
+  - None.
+
+Returns:
+  - The `refuter-api` package object.
+
+Side Effects:
+  - Changes the `*package*` to `:refuter-api`."
   (format t "Switching to REFUTER-API package...~%")
   (handler-case
       (in-package #:refuter-api)
@@ -149,9 +207,26 @@
 
 ;; CORRECTED: Ensure the DEFUN form is correctly closed at the very end.
 (defun setup-refuter-session (&key api-file-path quicklisp-setup-path)
-  "Sets up the Lisp session for the Refuter API by loading Quicklisp,
-   required libraries, and the refuter-api.lisp file.
-   Uses helper functions for each step."
+  "The main entry point for setting up a complete Refuter API session.
+This function orchestrates the entire setup process by calling a series of
+helper functions to:
+1. Load Quicklisp.
+2. Load required libraries (Hunchentoot, Jonathan).
+3. Load the `refuter-api.lisp` application file.
+4. Set the necessary global variables within the API package.
+5. Switch the current package to `:refuter-api` for interactive use.
+
+Parameters:
+  - API-FILE-PATH (Keyword, Optional): The path to `refuter-api.lisp`.
+    Defaults to the same directory as this script.
+  - QUICKLISP-SETUP-PATH (Keyword, Optional): The path to Quicklisp's `setup.lisp`.
+    Defaults to '~/quicklisp/setup.lisp'.
+
+Returns:
+  - T upon successful completion of all setup steps.
+
+Side Effects:
+  - Modifies the Lisp environment by loading libraries and setting package state."
 
   (format t "~&Starting Refuter API session setup...~%")
 

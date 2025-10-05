@@ -4,21 +4,35 @@
 
 (defclass relnet-node ()
   ((name :initarg :name :accessor relnet-node-name)
-   (type :initarg :type :accessor relnet-node-type)))
+   (type :initarg :type :accessor relnet-node-type))
+  (:documentation "Represents a node in the relational network, enhanced with a type.
 
-(defvar *knowledge-base* nil "Global Knowledge Base (Minimal for Prototype)")
+Slots:
+  - NAME: The symbolic name of the node.
+  - TYPE: The type of the node (e.g., 'formula', 'term')."))
+
+(defvar *knowledge-base* nil
+  "The global knowledge base for the prover. In this prototype, it is not
+used beyond being passed to axiom and rule functions.")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Complexity Metrics - Global Counters - EXPANDED METRIC SET
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defvar *axiom-applications-count* 0 "Counter for axiom applications.")
-(defvar *rule-applications-count* 0 "Counter for rule applications.")
-(defvar *search-depth* 0 "Maximum search depth explored.")
-(defvar *current-depth* 0 "Current search depth.")
-(defvar *branching-factor-sum* 0 "Sum of branching factors at each rule application.")
-(defvar *rule-applications-total* 0 "Total rule applications for branching factor average.")
-(defvar *execution-time* 0 "Execution time of prover run.")
+(defvar *axiom-applications-count* 0
+  "Counts the total number of axiom applications within a single prover run.")
+(defvar *rule-applications-count* 0
+  "Counts the total number of rule applications within a single prover run.")
+(defvar *search-depth* 0
+  "Tracks the maximum depth reached in the proof/refutation search tree.")
+(defvar *current-depth* 0
+  "A dynamic variable tracking the current depth in the search tree.")
+(defvar *branching-factor-sum* 0
+  "The sum of branching factors for all applied rules, used to calculate the average.")
+(defvar *rule-applications-total* 0
+  "The total number of rule applications, used as the denominator for the average branching factor.")
+(defvar *execution-time* 0
+  "The total time taken for a `run-prover` execution, measured in seconds.")
 ;;;(defvar *memory-usage* 0 "Memory usage during prover run.") ;;;; Memory usage - potentially complex for prototype
 
 
@@ -27,7 +41,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun reset-complexity-counters ()
-  "Resets all complexity counters to 0."
+  "Resets all global complexity metric counters to their initial zero state."
   (setf *axiom-applications-count* 0)
   (setf *rule-applications-count* 0)
   (setf *search-depth* 0)
@@ -44,9 +58,18 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun axiom-con-r (kb)
-  "Proof Axiom (axiom con_R (() con)). Minimal implementation.
-   Represents an axiomatically proven sequent/context.
-   [Complexity Metric: axiom-applications-count, search-depth]"
+  "Implements the con_R axiom, representing an axiomatically proven context.
+This version tracks complexity metrics, including axiom applications and search depth.
+
+Parameters:
+  - KB: The knowledge base (ignored).
+
+Returns:
+  - The keyword :PROVEN.
+
+Side Effects:
+  - Increments `*axiom-applications-count*`.
+  - Manages `*current-depth*` and updates `*search-depth*`."
   (declare (ignore kb))
   (incf *axiom-applications-count*)
   (incf *current-depth*)
@@ -56,9 +79,18 @@
   :proven)
 
 (defun axiom-incon-l (kb)
-  "Refutation Axiom (axiom incon_L (incon ())). Minimal implementation.
-   Represents an axiomatically refuted sequent/context.
-   [Complexity Metric: axiom-applications-count, search-depth]"
+  "Implements the incon_L axiom, representing an axiomatically refuted context.
+This version tracks complexity metrics, including axiom applications and search depth.
+
+Parameters:
+  - KB: The knowledge base (ignored).
+
+Returns:
+  - The keyword :REFUTED.
+
+Side Effects:
+  - Increments `*axiom-applications-count*`.
+  - Manages `*current-depth*` and updates `*search-depth*`."
   (declare (ignore kb))
   (incf *axiom-applications-count*)
   (incf *current-depth*)
@@ -73,8 +105,15 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun rule-dependence-r (kb)
-  "Dependence Right Rule (rule dependenceR). Sequential AND in Proof.
-   [Complexity Metric: rule-applications-count, branching-factor, search-depth]"
+  "Simulates the 'Dependence Right' (dependenceR) rule.
+This rule represents a sequential AND with a branching factor of 1. It also
+tracks rule applications and search depth.
+
+Parameters:
+  - KB: The knowledge base.
+
+Returns:
+  - :RULE-APPLIED on success, NIL on failure."
   (format t "Proof Thread: Attempting rule dependenceR (Dependence Right). (Depth: ~A)~%" *current-depth*)
   (incf *rule-applications-count*)
   (incf *rule-applications-total*) ;; For branching factor calculation
@@ -94,8 +133,15 @@
           nil))))               ; Rule failed to apply
 
 (defun rule-dependence-l (kb)
-  "Dependence Left Rule (rule dependenceL). Sequential AND in Refutation.
-   [Complexity Metric: rule-applications-count, branching-factor, search-depth]"
+  "Simulates the 'Dependence Left' (dependenceL) rule.
+This rule represents a sequential AND with a branching factor of 1. It also
+tracks rule applications and search depth.
+
+Parameters:
+  - KB: The knowledge base.
+
+Returns:
+  - :RULE-APPLIED on success, NIL on failure."
   (format t "Refutation Thread: Attempting rule dependenceL (Dependence Left). (Depth: ~A)~%" *current-depth*)
   (incf *rule-applications-count*)
   (incf *rule-applications-total*) ;; For branching factor calculation
@@ -116,8 +162,16 @@
 
 
 (defun rule-independence-r (kb &key axiom-con)
-  "Independence Right Rule (rule independenceR) - THREADED. Concurrent OR in Proof.
-   [Complexity Metric: rule-applications-count, branching-factor, search-depth]"
+  "Simulates the 'Independence Right' (independenceR) rule using parallel threads.
+This rule represents a concurrent OR with a branching factor of 2. It also
+tracks rule applications and search depth.
+
+Parameters:
+  - KB: The knowledge base.
+  - AXIOM-CON (Keyword, Optional): A function for proving premises.
+
+Returns:
+  - Multiple values: :RULE-APPLIED and a keyword for the successful premise, or NIL, NIL."
   (format t "Proof Thread: Attempting rule independenceR (Independence Right) - THREADED. (Depth: ~A)~%" *current-depth*)
   (incf *rule-applications-count*)
   (incf *rule-applications-total*) ;; For branching factor calculation
@@ -163,8 +217,16 @@
 
 
 (defun rule-independence-l (kb &key axiom-incon)
-  "Independence Left Rule (rule independenceL) - THREADED. Concurrent OR in Refutation.
-   [Complexity Metric: rule-applications-count, branching-factor, search-depth]"
+  "Simulates the 'Independence Left' (independenceL) rule using parallel threads.
+This rule represents a concurrent OR with a branching factor of 2. It also
+tracks rule applications and search depth.
+
+Parameters:
+  - KB: The knowledge base.
+  - AXIOM-INCON (Keyword, Optional): A function for refuting premises.
+
+Returns:
+  - Multiple values: :RULE-APPLIED and a keyword for the successful premise, or NIL, NIL."
   (format t "Refutation Thread: Attempting rule independenceL (Independence Left) - THREADED. (Depth: ~A)~%" *current-depth*)
   (incf *rule-applications-count*)
   (incf *rule-applications-total*) ;; For branching factor calculation
@@ -312,9 +374,14 @@
 
 
 (defun run-prover ()
-  "Runs the barebones theorem prover prototype with two threads (proof and refutation).
-   Orchestrates parallel proof and refutation attempts and determines the overall prover result.
-   [Complexity Reporting: axiom-applications-count, rule-applications-count, search-depth, branching-factor, execution-time]"
+  "Runs the theorem prover and tracks execution time and other complexity metrics.
+This function initializes the prover, starts the proof and refutation threads,
+waits for a result, and calculates the total execution time.
+
+Returns:
+  - :PROVEN if the proof thread finishes first.
+  - :REFUTED if the refutation thread finishes first.
+  - :UNKNOWN for any other case."
   (format t "Prover: Initializing Knowledge Base.~%")
   (initialize-knowledge-base)
 
@@ -355,14 +422,26 @@
   (setf *test-suite-summary* (make-hash-table)))
 
 (defun update-test-summary (test-category test-name result metrics)
-  "Updates the test suite summary with the result of a test and associated metrics."
+  "Updates the test summary with a test's result and its captured metrics.
+
+Parameters:
+  - TEST-CATEGORY: The category of the test.
+  - TEST-NAME: The name of the test.
+  - RESULT: Boolean pass/fail status.
+  - METRICS: A plist of complexity metrics captured during the test run."
   (let ((category-summary (gethash test-category *test-suite-summary*
                                      (make-hash-table :test #'equal))))
     (setf (gethash test-name category-summary) (cons result metrics)) ;; Store result and metrics
     (setf (gethash test-category *test-suite-summary*) category-summary)))
 
 (defun format-test-result (test-name pass-fail message metrics)
-  "Formats the test result output for console display, including metrics."
+  "Formats and prints a single test result, including its associated complexity metrics.
+
+Parameters:
+  - TEST-NAME: The name of the test.
+  - PASS-FAIL: Boolean pass/fail status.
+  - MESSAGE: The failure message, if any.
+  - METRICS: A plist of complexity metrics to display."
   (if pass-fail
       (format t "    Test ~A: PASS~%" test-name)  ; Indented for category clarity
       (format t "    Test ~A: FAIL - ~A~%" test-name message)) ; Indented for category clarity
@@ -379,7 +458,16 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun assert-result (actual expected test-name test-category comparison-fn expected-str actual-str)
-  "Generic assertion function to compare actual vs expected results, update test summary, and capture metrics."
+  "Generic assertion function that captures and records complexity metrics.
+
+This function compares results, captures the current state of all complexity
+metric variables, and records everything in the global test summary.
+
+Parameters:
+  - All parameters from the previous version.
+
+Returns:
+  - Boolean pass/fail status."
   (let ((pass-fail (funcall comparison-fn actual expected))
         (message (format nil "Expected ~A (~A), got ~A (~A)" expected expected-str actual actual-str))
         (metrics (list :axiom-applications-count *axiom-applications-count*
@@ -393,7 +481,14 @@
     pass-fail))
 
 (defun run-tests (test-functions test-category)
-  "Generic test runner function to execute a list of test functions for a category."
+  "A generic test runner that resets the knowledge base and metrics before each test.
+
+Parameters:
+  - TEST-FUNCTIONS: A list of test function symbols to execute.
+  - TEST-CATEGORY: The name of the category for reporting.
+
+Returns:
+  - A cons cell `(PASSED . FAILED)` with the test counts for the category."
   (format t "~%Running ~A Tests:~%" test-category)
   (let ((passed-count 0)
         (failed-count 0))
@@ -640,7 +735,7 @@
 
 
 (defun iterate-test-summary ()
-  "Iterates through the test summary and prints details of failed tests, including metrics."
+  "Iterates through the test summary and prints detailed metrics for failed tests."
   (loop for category being the hash-keys of *test-suite-summary* using (hash-value category-summary)
         do (format t "~%~A Tests:~%" category)
            (loop for test-name being the hash-keys of category-summary using (hash-value result-metrics-cons)
@@ -661,6 +756,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun main ()
+  "The main entry point for the script.
+It runs the full suite of unit tests and then executes the main `run-prover`
+function, demonstrating the prover's operation and printing all captured
+complexity metrics."
   (format t "Starting Barebones Theorem Prover Prototype (Refactored - Threaded Independence Rules - COMPLEXITY ANALYSIS).~%")
 
   (let ((test-run-successful (run-all-tests)))  ; Run unit tests and get success status

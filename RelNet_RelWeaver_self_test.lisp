@@ -207,7 +207,16 @@
      )
     )
   )
- "RelNet Abstraction of RelNet Weaver Self-Testing System Prototype."
+ "A data structure representing a Relational Network (RelNet) abstraction of the RelNet Weaver's self-testing system.
+
+This variable extends the architectural model of the prover to include its testing framework. It defines the components of the test suite as nodes and their interactions as edges, providing a meta-level view of how the system is verified.
+
+- **Extended Node Types:** Adds types like `test-function`, `test-runner`, `test-summary`, `assertion-function`, etc., to the prover's node types.
+- **Extended Edge Types:** Adds relationships like `tests`, `asserts`, `summarizes`, `includes-test`, etc., to describe the testing process.
+- **Test Component Nodes:** Defines the specific test functions, runners, and helper utilities as nodes in the network.
+- **Test Relationship Edges:** Maps out how test runners call test functions, how tests use assertions, and how the main entry point orchestrates the entire test run before executing the prover.
+
+This abstraction is intended for analyzing the testing strategy, understanding test dependencies, and visualizing the relationship between the prover's logic and its verification suite."
  )
 
 *relnet-self-testing-abstraction*

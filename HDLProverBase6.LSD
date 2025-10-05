@@ -4,22 +4,41 @@
 
 (defclass relnet-node ()
   ((name :initarg :name :accessor relnet-node-name)
-   (type :initarg :type :accessor relnet-node-type)))
+   (type :initarg :type :accessor relnet-node-type))
+  (:documentation "Represents a node in the relational network, enhanced with a type.
 
-(defvar *knowledge-base* nil "Global Knowledge Base (Minimal for Prototype)")
+Slots:
+  - NAME: The symbolic name of the node.
+  - TYPE: The type of the node (e.g., 'formula', 'term')."))
+
+(defvar *knowledge-base* nil
+  "The global knowledge base for the prover. In this prototype, it is not
+used beyond being passed to axiom and rule functions.")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Axioms (con_R and incon_L - Minimal for Prototype)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun axiom-con-r (kb)
-  "Proof Axiom (axiom con_R (() con)). Minimal implementation."
+  "A minimal implementation of the 'Consistency Right' (con_R) proof axiom.
+
+Parameters:
+  - KB: The knowledge base (ignored).
+
+Returns:
+  - The keyword :PROVEN."
   (declare (ignore kb))
   (format t "Proof Thread: Applying con_R axiom - Axiomatically Proven.~%")
   :proven)
 
 (defun axiom-incon-l (kb)
-  "Refutation Axiom (axiom incon_L (incon ())). Minimal implementation."
+  "A minimal implementation of the 'Inconsistency Left' (incon_L) refutation axiom.
+
+Parameters:
+  - KB: The knowledge base (ignored).
+
+Returns:
+  - The keyword :REFUTED."
   (declare (ignore kb))
   (format t "Refutation Thread: Applying incon_L axiom - Axiomatically Refuted.~%")
   :refuted)
@@ -30,7 +49,13 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun rule-dependence-r (kb)
-  "Dependence Right Rule (rule *DEP*R). Testable version."
+  "Simulates the 'Dependence Right' (*DEP*R) rule, representing a logical AND.
+
+Parameters:
+  - KB: The knowledge base.
+
+Returns:
+  - :RULE-APPLIED on success, NIL on failure."
   (format t "Proof Thread: Attempting rule *DEP*R (Dependence Right).~%")
   (let ((proof1-result (axiom-con-r kb))
         (proof2-result (axiom-con-r kb)))
@@ -43,7 +68,13 @@
           nil))))
 
 (defun rule-dependence-l (kb)
-  "Dependence Left Rule (rule *DEP*L). Testable version."
+  "Simulates the 'Dependence Left' (*DEP*L) rule, representing a logical AND.
+
+Parameters:
+  - KB: The knowledge base.
+
+Returns:
+  - :RULE-APPLIED on success, NIL on failure."
   (format t "Refutation Thread: Attempting rule *DEP*L (Dependence Left).~%")
   (let ((refute1-result (axiom-incon-l kb))
         (refute2-result (axiom-incon-l kb)))
@@ -56,7 +87,16 @@
           nil))))
 
 (defun rule-independence-r (kb &key axiom-con)
-  "Independence Right Rule (rule *IND*R). Testable version with early exit."
+  "Simulates the 'Independence Right' (*IND*R) rule with early exit logic.
+This rule represents a logical OR and returns detailed evaluation information.
+
+Parameters:
+  - KB: The knowledge base.
+  - AXIOM-CON (Keyword, Optional): A function for proving premises.
+
+Returns:
+  - Multiple values on success or failure, including status, which premise succeeded,
+    and which premises were evaluated."
   (format t "Proof Thread: Attempting rule *IND*R (Independence Right).~%")
   (let ((premise1-evaluated nil)
         (premise2-evaluated nil))
@@ -78,7 +118,16 @@
 
 
 (defun rule-independence-l (kb &key axiom-incon)
-  "Independence Left Rule (rule *IND*L). Testable version with early exit."
+  "Simulates the 'Independence Left' (*IND*L) rule with early exit logic.
+This rule represents a logical OR and returns detailed evaluation information.
+
+Parameters:
+  - KB: The knowledge base.
+  - AXIOM-INCON (Keyword, Optional): A function for refuting premises.
+
+Returns:
+  - Multiple values on success or failure, including status, which premise succeeded,
+    and which premises were evaluated."
   (format t "Refutation Thread: Attempting rule *IND*L (Independence Left).~%")
   (let ((premise1-evaluated nil)
         (premise2-evaluated nil))
@@ -103,13 +152,20 @@
 ;;; Thread Functions (Proof and Refutation - Minimal for Prototype)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defvar *proof-result* nil "Variable to store proof thread result")
-(defvar *refutation-result* nil "Variable to store refutation thread result")
-(defvar *termination-flag* nil "Flag to signal termination to both threads")
+(defvar *proof-result* nil
+  "Holds the result from the proof thread.")
+(defvar *refutation-result* nil
+  "Holds the result from the refutation thread.")
+(defvar *termination-flag* nil
+  "A flag to coordinate the termination of the proof and refutation threads.")
 
 
 (defun proof-thread-function ()
-  "Proof Thread: Applies con_R, *DEP*R and *IND*R rules, sets *proof-result*."
+  "The main function for the proof-seeking thread.
+Sequentially applies axioms and rules to find a proof.
+
+Returns:
+  - :PROVEN on success, :UNKNOWN on failure."
   (format t "Proof Thread: Starting.~%")
   (sleep 1)
 
@@ -150,7 +206,11 @@
 
 
 (defun refutation-thread-function ()
-  "Refutation Thread: Applies incon_L, *DEP*L and *IND*L rules, sets *refutation-result*."
+  "The main function for the refutation-seeking thread.
+Sequentially applies axioms and rules to find a refutation.
+
+Returns:
+  - :REFUTED on success, :UNKNOWN on failure."
   (format t "Refutation Thread: Starting.~%")
   (sleep 1.5)
 
@@ -194,11 +254,16 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun initialize-knowledge-base ()
-  "Initializes the global *knowledge-base* (minimal for prototype)."
+  "Resets the `*knowledge-base*` to an empty state."
   (setf *knowledge-base* nil))
 
 (defun run-prover ()
-  "Runs the barebones theorem prover prototype with two threads."
+  "Runs the theorem prover by orchestrating parallel proof and refutation threads.
+
+Returns:
+  - :PROVEN if the proof thread finishes first.
+  - :REFUTED if the refutation thread finishes first.
+  - :UNKNOWN for any other case."
   (format t "Prover: Initializing Knowledge Base.~%")
   (initialize-knowledge-base)
 
@@ -227,27 +292,32 @@
 ;;; Unit Tests - Comprehensive and Targeted - ENHANCED - REFACTORED and MODULARIZED
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defvar *test-suite-summary* (make-hash-table) "Summary of test suite results.")
+(defvar *test-suite-summary* (make-hash-table)
+  "A hash table to store the results of the test suite.
+Keys are test categories, and values are hash tables of test results.")
 
 (defun reset-test-summary ()
-  "Resets the *test-suite-summary* hash table."
+  "Resets the `*test-suite-summary*` to an empty state before a test run."
   (setf *test-suite-summary* (make-hash-table)))
 
 (defun update-test-summary (test-category test-name result)
-  "Updates the test suite summary."
+  "Records the result of a single test in the `*test-suite-summary*`."
   (let ((category-summary (gethash test-category *test-suite-summary*
                                    (make-hash-table :test #'equal))))
     (setf (gethash test-name category-summary) result)
     (setf (gethash test-category *test-suite-summary*) category-summary)))
 
 (defun format-test-result (test-name pass-fail message)
-  "Formats the test result output."
+  "Prints a formatted summary of a single test's result."
   (if pass-fail
       (format t "    Test ~A: PASS~%" test-name) ; Indented for category clarity
       (format t "    Test ~A: FAIL - ~A~%" test-name message))) ; Indented for category clarity
 
 (defun assert-eq (actual expected test-name test-category)
-  "Assertion for equality, updates test summary."
+  "Asserts that `actual` is `equal` to `expected`.
+
+Returns:
+  - T if the assertion passes, NIL otherwise."
   (let ((pass-fail (equal actual expected))
         (message (format nil "Expected ~A, got ~A" expected actual)))
     (format-test-result test-name pass-fail message)
@@ -255,27 +325,34 @@
     pass-fail))
 
 (defun assert-true (condition test-name test-category message)
-  "Assertion for truth, updates test summary."
+  "Asserts that a given condition is true.
+
+Returns:
+  - T if the condition is true, NIL otherwise."
   (let ((pass-fail condition))
     (format-test-result test-name pass-fail message)
     (update-test-summary test-category test-name pass-fail)
     pass-fail))
 
 (defun assert-rule-applied (result test-name test-category)
-  "Assertion for rule application, updates test summary."
+  "A specific assertion to check if a rule function returned :rule-applied."
   (assert-true (eq result :rule-applied) test-name test-category (format nil "Expected :rule-applied, got ~A" result)))
 
 (defun assert-axiom-proven (result test-name test-category)
-  "Assertion for axiom proof, updates test summary."
+  "A specific assertion to check if an axiom function returned :proven."
   (assert-true (eq result :proven) test-name test-category (format nil "Expected :proven, got ~A" result)))
 
 (defun assert-axiom-refuted (result test-name test-category)
-  "Assertion for axiom refutation, updates test summary."
+  "A specific assertion to check if an axiom function returned :refuted."
   (assert-true (eq result :refuted) test-name test-category (format nil "Expected :refuted, got ~A" result)))
 
 
 (defun run-axiom-tests ()
-  "Runs all axiom tests and updates test summary."
+  "A test runner for the axiom-related tests.
+It executes each axiom test and reports the aggregated results.
+
+Returns:
+  - A cons cell `(PASSED . FAILED)` with the test counts for this category."
   (format t "~%Running Axiom Tests:~%")
   (let ((passed-count 0)
         (failed-count 0))
@@ -286,7 +363,11 @@
 
 
 (defun run-dependence-rule-tests ()
-  "Runs all dependence rule tests and updates test summary."
+  "A test runner for the dependence rule tests.
+It executes each dependence rule test and reports the aggregated results.
+
+Returns:
+  - A cons cell `(PASSED . FAILED)` with the test counts for this category."
   (format t "~%Running Dependence Rule Tests:~%")
   (let ((passed-count 0)
         (failed-count 0))
@@ -298,7 +379,11 @@
     (cons passed-count failed-count)))
 
 (defun run-independence-rule-tests ()
-  "Runs all independence rule tests and updates test summary."
+  "A test runner for the independence rule tests.
+It executes each independence rule test and reports the aggregated results.
+
+Returns:
+  - A cons cell `(PASSED . FAILED)` with the test counts for this category."
   (format t "~%Running Independence Rule Tests:~%")
   (let ((passed-count 0)
         (failed-count 0))
@@ -315,7 +400,12 @@
 
 
 (defun run-test-categories ()
-  "Runs all test categories and aggregates results."
+  "The main test harness function that orchestrates all test categories.
+It calls the specific runners for axioms, dependence rules, and independence rules,
+and then prints a final summary of all results.
+
+Side Effects:
+  - Prints a detailed test summary to standard output."
   (reset-test-summary)
   (format t "Starting Unit Tests.~%")
 
@@ -339,7 +429,8 @@
 
 
 (defun iterate-test-summary ()
-  "Iterates through the test summary and prints details of failed tests."
+  "Iterates through the `*test-suite-summary*` and prints a detailed report,
+including a list of failed tests for each category."
   (loop for category being the hash-keys of *test-suite-summary* using (hash-value category-summary)
         do (format t "~%~A Tests:~%" category)
            (loop for test-name being the hash-keys of category-summary using (hash-value result)
@@ -353,11 +444,15 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun test-axiom-con-r ()
+  "Tests the `axiom-con-r` function.
+Returns a pass/fail boolean and the test name for aggregation."
   (let ((result (axiom-con-r *knowledge-base*)))
     (assert-axiom-proven result "axiom-con-r" "Axiom") ; Category "Axiom"
     (values (assert-axiom-proven result "axiom-con-r" "Axiom") "axiom-con-r")))
 
 (defun test-axiom-incon-l ()
+  "Tests the `axiom-incon-l` function.
+Returns a pass/fail boolean and the test name for aggregation."
   (let ((result (axiom-incon-l *knowledge-base*)))
     (assert-axiom-refuted result "axiom-incon-l" "Axiom") ; Category "Axiom"
     (values (assert-axiom-refuted result "axiom-incon-l" "Axiom") "axiom-incon-l")))
@@ -368,21 +463,29 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun test-rule-dependence-r-positive ()
+  "Tests the positive case for `rule-dependence-r`.
+Returns a pass/fail boolean and the test name for aggregation."
   (let ((result (rule-dependence-r *knowledge-base*)))
     (assert-rule-applied result "rule-dependence-r-positive" "Dependence Rule") ; Category "Dependence Rule"
     (values (assert-rule-applied result "rule-dependence-r-positive" "Dependence Rule") "rule-dependence-r-positive")))
 
 (defun test-rule-dependence-r-negative ()
+  "Tests the negative case for `rule-dependence-r`.
+Returns a pass/fail boolean and the test name for aggregation."
   (let ((result (rule-dependence-r *knowledge-base*)))
     (assert-rule-applied result "rule-dependence-r-negative" "Dependence Rule") ; Category "Dependence Rule"
     (values (assert-rule-applied result "rule-dependence-r-negative" "Dependence Rule") "rule-dependence-r-negative")))
 
 (defun test-rule-dependence-l-positive ()
+  "Tests the positive case for `rule-dependence-l`.
+Returns a pass/fail boolean and the test name for aggregation."
   (let ((result (rule-dependence-l *knowledge-base*)))
     (assert-rule-applied result "rule-dependence-l-positive" "Dependence Rule") ; Category "Dependence Rule"
     (values (assert-rule-applied result "rule-dependence-l-positive" "Dependence Rule") "rule-dependence-l-positive")))
 
 (defun test-rule-dependence-l-negative ()
+  "Tests the negative case for `rule-dependence-l`.
+Returns a pass/fail boolean and the test name for aggregation."
   (let ((result (rule-dependence-l *knowledge-base*)))
     (assert-rule-applied result "rule-dependence-l-negative" "Dependence Rule") ; Category "Dependence Rule"
     (values (assert-rule-applied result "rule-dependence-l-negative" "Dependence Rule") "rule-dependence-l-negative")))
@@ -557,6 +660,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun main ()
+  "The main entry point for the script.
+It first runs the full suite of unit tests using the categorical runners
+and then executes the main `run-prover` function."
   (format t "Starting Barebones Theorem Prover Prototype.~%")
 
   (run-test-categories) ; Run unit tests - now with categories and summary

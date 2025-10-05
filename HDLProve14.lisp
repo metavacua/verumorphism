@@ -4,16 +4,27 @@
 
 (defclass relnet-node ()
   ((name :initarg :name :accessor relnet-node-name)
-   (type :initarg :type :accessor relnet-node-type)))
+   (type :initarg :type :accessor relnet-node-type))
+  (:documentation "Represents a node in the relational network, enhanced with a type.
 
-(defvar *knowledge-base* nil "Global Knowledge Base (Minimal for Prototype)")
+Slots:
+  - NAME: The symbolic name of the node.
+  - TYPE: The type of the node (e.g., 'formula', 'term')."))
+
+(defvar *knowledge-base* nil
+  "The global knowledge base for the prover. In this prototype, it is not
+used beyond being passed to axiom and rule functions.")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Complexity Metrics - Global Counters
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defvar *axiom-applications-count* 0 "Counter for axiom applications.")
-(defvar *rule-applications-count* 0 "Counter for rule applications.")
+(defvar *axiom-applications-count* 0
+  "Counts the total number of axiom applications within a single `run-prover` call.
+This serves as a basic complexity metric and is reset by `initialize-knowledge-base`.")
+(defvar *rule-applications-count* 0
+  "Counts the total number of rule applications within a single `run-prover` call.
+This serves as a basic complexity metric and is reset by `initialize-knowledge-base`.")
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -21,18 +32,36 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun axiom-con-r (kb)
-  "Proof Axiom (axiom con_R (() con)). Minimal implementation.
-   Represents an axiomatically proven sequent/context.
-   [Complexity Metric: axiom-applications-count]"
+  "A minimal implementation of the 'Consistency Right' (con_R) proof axiom.
+This represents an axiomatically proven sequent or context and increments the
+axiom application counter.
+
+Parameters:
+  - KB: The knowledge base (ignored).
+
+Returns:
+  - The keyword :PROVEN.
+
+Side Effects:
+  - Increments `*axiom-applications-count*`."
   (declare (ignore kb))
   (incf *axiom-applications-count*) ;; Increment axiom application counter
   (format t "Proof Thread: Applying con_R axiom - Axiomatically Proven.~%")
   :proven)
 
 (defun axiom-incon-l (kb)
-  "Refutation Axiom (axiom incon_L (incon ())). Minimal implementation.
-   Represents an axiomatically refuted sequent/context.
-   [Complexity Metric: axiom-applications-count]"
+  "A minimal implementation of the 'Inconsistency Left' (incon_L) refutation axiom.
+This represents an axiomatically refuted sequent or context and increments the
+axiom application counter.
+
+Parameters:
+  - KB: The knowledge base (ignored).
+
+Returns:
+  - The keyword :REFUTED.
+
+Side Effects:
+  - Increments `*axiom-applications-count*`."
   (declare (ignore kb))
   (incf *axiom-applications-count*) ;; Increment axiom application counter
   (format t "Refutation Thread: Applying incon_L axiom - Axiomatically Refuted.~%")
@@ -44,8 +73,15 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun rule-dependence-r (kb)
-  "Dependence Right Rule (rule dependenceR). Sequential AND in Proof.
-   [Complexity Metric: rule-applications-count]"
+  "Simulates the 'Dependence Right' (dependenceR) rule.
+This rule represents a sequential AND in a proof and increments the rule
+application counter.
+
+Parameters:
+  - KB: The knowledge base.
+
+Returns:
+  - :RULE-APPLIED on success, NIL on failure."
   (format t "Proof Thread: Attempting rule dependenceR (Dependence Right).~%")
   (incf *rule-applications-count*) ;; Increment rule application counter
   (let ((proof1-result (axiom-con-r kb))  ; Thread 1: Attempt to prove premise 1
@@ -59,8 +95,15 @@
           nil))))                ; Rule failed to apply
 
 (defun rule-dependence-l (kb)
-  "Dependence Left Rule (rule dependenceL). Sequential AND in Refutation.
-   [Complexity Metric: rule-applications-count]"
+  "Simulates the 'Dependence Left' (dependenceL) rule.
+This rule represents a sequential AND in a refutation and increments the rule
+application counter.
+
+Parameters:
+  - KB: The knowledge base.
+
+Returns:
+  - :RULE-APPLIED on success, NIL on failure."
   (format t "Refutation Thread: Attempting rule dependenceL (Dependence Left).~%")
   (incf *rule-applications-count*) ;; Increment rule application counter
   (let ((refute1-result (axiom-incon-l kb)) ; Thread 1: Attempt to refute premise 1
@@ -75,8 +118,16 @@
 
 
 (defun rule-independence-r (kb &key axiom-con)
-  "Independence Right Rule (rule independenceR) - THREADED. Concurrent OR in Proof.
-   [Complexity Metric: rule-applications-count]"
+  "Simulates the 'Independence Right' (independenceR) rule using parallel threads.
+This rule represents a concurrent OR in a proof and increments the rule
+application counter.
+
+Parameters:
+  - KB: The knowledge base.
+  - AXIOM-CON (Keyword, Optional): A function for proving premises, defaults to `axiom-con-r`.
+
+Returns:
+  - Multiple values: :RULE-APPLIED and a keyword for the successful premise, or NIL, NIL."
   (format t "Proof Thread: Attempting rule independenceR (Independence Right) - THREADED.~%")
   (incf *rule-applications-count*) ;; Increment rule application counter
   (let ((premise1-result nil)
@@ -116,8 +167,16 @@
 
 
 (defun rule-independence-l (kb &key axiom-incon)
-  "Independence Left Rule (rule independenceL) - THREADED. Concurrent OR in Refutation.
-   [Complexity Metric: rule-applications-count]"
+  "Simulates the 'Independence Left' (independenceL) rule using parallel threads.
+This rule represents a concurrent OR in a refutation and increments the rule
+application counter.
+
+Parameters:
+  - KB: The knowledge base.
+  - AXIOM-INCON (Keyword, Optional): A function for refuting premises, defaults to `axiom-incon-l`.
+
+Returns:
+  - Multiple values: :RULE-APPLIED and a keyword for the successful premise, or NIL, NIL."
   (format t "Refutation Thread: Attempting rule independenceL (Independence Left) - THREADED.~%")
   (incf *rule-applications-count*) ;; Increment rule application counter
   (let ((premise1-result nil)
@@ -160,15 +219,21 @@
 ;;; Thread Functions (Proof and Refutation - Minimal for Prototype)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defvar *proof-result* nil "Variable to store proof thread result")
-(defvar *refutation-result* nil "Variable to store refutation thread result")
-(defvar *termination-flag* nil "Flag to signal termination to both threads")
+(defvar *proof-result* nil
+  "Holds the result from the proof thread.")
+(defvar *refutation-result* nil
+  "Holds the result from the refutation thread.")
+(defvar *termination-flag* nil
+  "A flag to coordinate the termination of the proof and refutation threads.")
 
 
 (defun proof-thread-function ()
-  "Proof Thread: Attempts to find a proof using axioms and rules.
-   Sequential process: Tries con_R, then *DEP*R, then *IND*R in order.
-   Sets *proof-result* and *termination-flag* upon finding a proof or exhausting rules."
+  "The main function for the proof-seeking thread.
+It sequentially tries to apply axioms and rules (`con_R`, `dependenceR`, `independenceR`).
+If any succeed, it sets the `*proof-result*` and `*termination-flag*` and exits.
+
+Returns:
+  - :PROVEN on success, :UNKNOWN on failure."
   (format t "Proof Thread: Starting.~%")
 
   ;; 1. Try axiom con_R (Axiomatic Proof - Immediate termination if successful)
@@ -208,9 +273,12 @@
 
 
 (defun refutation-thread-function ()
-  "Refutation Thread: Attempts to find a refutation using axioms and rules.
-   Sequential process: Tries incon_L, then *DEP*L, then *IND*L in order.
-   Sets *refutation-result* and *termination-flag* upon finding a refutation or exhausting rules."
+  "The main function for the refutation-seeking thread.
+It sequentially tries to apply axioms and rules (`incon_L`, `dependenceL`, `independenceL`).
+If any succeed, it sets the `*refutation-result*` and `*termination-flag*` and exits.
+
+Returns:
+  - :REFUTED on success, :UNKNOWN on failure."
   (format t "Refutation Thread: Starting.~%")
 
   ;; 1. Try axiom incon_L (Axiomatic Refutation - Immediate termination if successful)
@@ -253,20 +321,26 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun initialize-knowledge-base ()
-  "Initializes the global *knowledge-base* (minimal for prototype) and resets complexity counters."
+  "Initializes the prover state by resetting the knowledge base and complexity counters."
   (setf *knowledge-base* nil)
   (reset-complexity-counters))  ;; Reset complexity counters at the start
 
 (defun reset-complexity-counters ()
-  "Resets all complexity counters to 0."
+  "Resets the global complexity counters `*axiom-applications-count*` and
+`*rule-applications-count*` to zero."
   (setf *axiom-applications-count* 0)
   (setf *rule-applications-count* 0))
 
 
 (defun run-prover ()
-  "Runs the barebones theorem prover prototype with two threads (proof and refutation).
-   Orchestrates parallel proof and refutation attempts and determines the overall prover result.
-   [Complexity Reporting: axiom-applications-count, rule-applications-count]"
+  "Runs the theorem prover, orchestrating proof and refutation threads.
+This function initializes the prover, starts the threads, and waits for a result.
+It also reports complexity metrics upon completion.
+
+Returns:
+  - :PROVEN if the proof thread finishes first.
+  - :REFUTED if the refutation thread finishes first.
+  - :UNKNOWN for any other case."
   (format t "Prover: Initializing Knowledge Base.~%")
   (initialize-knowledge-base)
 
@@ -587,6 +661,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun main ()
+  "The main entry point for the script.
+It runs the full suite of unit tests and then executes the main `run-prover`
+function, demonstrating the prover's operation and printing complexity metrics."
   (format t "Starting Barebones Theorem Prover Prototype (Refactored - Threaded Independence Rules).~%")
 
   (let ((test-run-successful (run-all-tests)))  ; Run unit tests and get success status

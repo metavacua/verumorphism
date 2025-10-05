@@ -53,10 +53,18 @@
 ;;; Functions to create and access the S-expression representation of formulas.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun make-incon () (list incon-symbol))
-(defun make-dep (formula1 formula2) (list dep-symbol formula1 formula2))
-(defun make-ind (formula1 formula2) (list ind-symbol formula1 formula2))
-(defun make-dual (formula) (list dual-symbol formula))
+(defun make-incon ()
+  "Constructs a constant 'incon' (inconsistency) formula."
+  (list incon-symbol))
+(defun make-dep (formula1 formula2)
+  "Constructs a dependence formula '(dep F1 F2)'."
+  (list dep-symbol formula1 formula2))
+(defun make-ind (formula1 formula2)
+  "Constructs an independence formula '(ind F1 F2)'."
+  (list ind-symbol formula1 formula2))
+(defun make-dual (formula)
+  "Constructs a dual formula '(dual F)'."
+  (list dual-symbol formula))
 
 (defun formula-type (formula)
   "Extracts the operator type (the first element) from a formula S-expression.
@@ -72,7 +80,13 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defstruct refutation-kbs
-  "Holds the knowledge bases for a single refutation run."
+  "Holds the knowledge bases for a single refutation run. This structure contains
+two hash tables to memoize the results of refutation attempts, preventing
+re-computation of the same sub-problems.
+
+Slots:
+  - KB-REFUTED: A hash table storing formulas that have been successfully refuted.
+  - KB-FAILED-REFUTATION: A hash table storing formulas that could not be refuted."
   (kb-refuted (make-hash-table :test 'equal) :type hash-table)
   (kb-failed-refutation (make-hash-table :test 'equal) :type hash-table))
 
@@ -265,7 +279,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun run-refuter (formula-string)
-  "Runs the refuter on a formula provided as a string."
+  "Runs the refuter on a formula provided as a string. It parses the string,
+initializes a new knowledge base, invokes the core refutation logic, and
+returns a structured result indicating success, failure, or an error."
   (handler-case
       (let* ((formula (parse-formula-string formula-string))
              (kbs (refuter-core::make-refutation-kbs))
@@ -277,7 +293,8 @@
       (list :error (format nil "~A" e))))) ; Return the error message directly
 
 (defun generate-counterwitness-info (original-formula kbs)
-  "Generates information about why a formula was not refuted."
+  "Generates information about why a formula was not refuted by collecting
+all formulas that failed refutation from the knowledge base."
   (declare (ignore original-formula))
   (let ((failed-formulas ()))
     (maphash (lambda (key value)
@@ -307,7 +324,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun main ()
-  "Main function to run the refuter with example string inputs."
+  "Main function to run the refuter with example string inputs. This serves as the
+primary test harness and demonstration of the refuter's capabilities."
   (format t "Starting Architected Refuter Prototype.~%")
 
   (let ((test-formulas
@@ -343,4 +361,3 @@
 ;; For CL environments like SLIME, it's often better to load the file
 ;; and then call (refuter-program:main) from the REPL.
 (main)
-

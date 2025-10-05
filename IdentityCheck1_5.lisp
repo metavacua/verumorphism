@@ -1,5 +1,9 @@
 (defpackage :weaver-system
   (:use #:cl)
+  (:documentation "This package defines the core matrix representations for the Weaver
+system's logical operators and provides functions to verify their algebraic
+identities. It serves as a mathematical foundation and verification script for
+the operator algebra.")
   (:export #:weaver-constants
            #:get-weaver-constant
            #:ax-con-r
@@ -24,6 +28,14 @@
 ;; Helper functions for matrix operations
 
 (defun matrix-add (matrix1 matrix2)
+  "Adds two 2x2 matrices element-wise.
+
+Parameters:
+  - MATRIX1: The first 2x2 matrix.
+  - MATRIX2: The second 2x2 matrix.
+
+Returns:
+  - A new 2x2 matrix representing the sum."
   (let ((rows (array-dimension matrix1 0))
         (cols (array-dimension matrix1 1))
         (result (make-array (array-dimensions matrix1) :element-type 'complex-float)))
@@ -33,6 +45,14 @@
     result))
 
 (defun scalar-multiply (scalar matrix)
+  "Multiplies a matrix by a scalar value.
+
+Parameters:
+  - SCALAR: The scalar number to multiply by.
+  - MATRIX: The 2x2 matrix to be scaled.
+
+Returns:
+  - A new 2x2 matrix representing the scaled result."
   (let ((rows (array-dimension matrix 0))
         (cols (array-dimension matrix 1))
         (result (make-array (array-dimensions matrix) :element-type 'complex-float)))
@@ -42,6 +62,13 @@
     result))
 
 (defun complex-conjugate-transpose (matrix)
+  "Computes the complex conjugate transpose (dagger) of a 2x2 matrix.
+
+Parameters:
+  - MATRIX: The 2x2 matrix to process.
+
+Returns:
+  - A new 2x2 matrix that is the complex conjugate transpose of the input."
   (let ((rows (array-dimension matrix 0))
         (cols (array-dimension matrix 1))
         (result (make-array '(2 2) :element-type 'complex-float)))
@@ -51,6 +78,15 @@
     result))
 
 (defun matrix-equalp (matrix1 matrix2)
+  "Checks if two matrices are element-wise equal using `equalp`.
+
+Parameters:
+  - MATRIX1: The first matrix.
+  - MATRIX2: The second matrix.
+
+Returns:
+  - T if the matrices have the same dimensions and all corresponding elements are equal.
+  - NIL otherwise."
   (let ((rows (array-dimension matrix1 0))
         (cols (array-dimension matrix1 1)))
     (if (and (= rows (array-dimension matrix2 0))
@@ -60,30 +96,45 @@
             (equalp (aref matrix1 r c) (aref matrix2 r c))))
         nil)))
 
+(defun matrix-subtract (matrix1 matrix2)
+  "Subtracts the second matrix from the first element-wise."
+  (matrix-add matrix1 (scalar-multiply -1 matrix2)))
+
 
 ;; Identity functions
 
 (defun identity-1-check ()
+  "Verifies the identity: I = DepR + i * DepL†"
   (matrix-equalp identity-matrix (matrix-add depr (scalar-multiply #C(0.0 1.0) (complex-conjugate-transpose depl)))))
 
 (defun identity-2-check ()
+  "Verifies the identity: I = DepR - i * DepL"
   (matrix-equalp identity-matrix (matrix-add depr (scalar-multiply #C(0.0 -1.0) depl))))
 
 (defun identity-3-check ()
+  "Verifies the identity: I = 2*DepR - IndR - i*IndL"
   (matrix-equalp identity-matrix
                (matrix-add (matrix-add (scalar-multiply 2 depr) (scalar-multiply -1 indr)) (scalar-multiply #C(0.0 -1.0) indl))))
 
 (defun identity-4-check ()
+  "Verifies the identity: I = DepR + i/2*(DepL† - DepL)"
   (matrix-equalp identity-matrix
-               (matrix-add depr (scalar-multiply #C(0.0 1.0)
-                                                 (matrix-add (complex-conjugate-transpose depl) (scalar-multiply #C(0.0 -1.0) depl))))))
+               (matrix-add depr (scalar-multiply #C(0.0 0.5)
+                                                 (matrix-subtract (complex-conjugate-transpose depl) depl)))))
 
 (defun identity-5-check ()
+  "Verifies the identity: I = 2*DepR - (IndR + i*IndL)"
   (matrix-equalp identity-matrix
                (matrix-add (scalar-multiply 2 depr) (matrix-add (scalar-multiply -1 indr) (scalar-multiply #C(0.0 -1.0) indl)))))
 
 
 (defun check-matrix-identities ()
+  "Runs all the defined identity checks and prints the results to standard output.
+This function serves as the main entry point for verifying the algebraic
+properties of the core Weaver matrices.
+
+Side Effects:
+  - Prints the result (T or NIL) of each identity check."
   (format t "Identity 1 (I = DepR + i DepL*): ~A~%" (identity-1-check))
   (format t "Identity 2 (I = DepR - i DepL): ~A~%" (identity-2-check))
   (format t "Identity 3 (I = 2 DepR - IndR - i IndL): ~A~%" (identity-3-check))

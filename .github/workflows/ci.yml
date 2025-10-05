@@ -1,4 +1,4 @@
-name: CI
+name: Common Lisp CI
 
 on:
   push:
@@ -7,18 +7,17 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Check out code
-      uses: actions/checkout@v3
+      - name: Check out code
+        uses: actions/checkout@v3
 
-    - name: Set up environment
-      run: |
-        chmod +x setup.sh
-        ./setup.sh
+      - name: Setup Common Lisp
+        uses: 40ants/setup-lisp@v1
+        with:
+          lisp: sbcl-bin
 
-    - name: Run application
-      run: |
-        sbcl --no-sysinit --no-userinit --load Preamble.lisp --eval '(quit)'
+      - name: Install Dependencies and Run Tests
+        run: |
+          sbcl --no-sysinit --no-userinit --load Preamble.lisp --eval '(progn (load "MacroTests.lisp") (load "IdentityCheck1_5.lisp") (quit))'

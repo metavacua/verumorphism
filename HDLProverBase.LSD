@@ -3,23 +3,48 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defclass relnet-node ()
-  ((name :initarg :name :accessor relnet-node-name)))
+  ((name :initarg :name :accessor relnet-node-name))
+  (:documentation "Represents a single node in a relational network.
+This class is a placeholder for a more complex data structure that would
+represent entities or concepts within the theorem prover's knowledge base.
 
-(defvar *knowledge-base* nil "Global Knowledge Base (Minimal for Prototype)")
+Slots:
+  - NAME: The symbolic name of the node."))
+
+(defvar *knowledge-base* nil
+  "The global knowledge base for the prover.
+In this minimal prototype, it is initialized as NIL and is not substantively
+used by the axioms, but it represents where facts and relations would be stored.")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Axioms (con_R and incon_L - Minimal for Prototype)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun axiom-con-r (kb)
-  "Proof Axiom (axiom con_R (() con)). Minimal implementation."
+  "A minimal implementation of the 'Consistency Right' (con_R) proof axiom.
+This function simulates an axiomatic proof. In a real system, it would check
+if the knowledge base (KB) meets the criteria for this axiom.
+
+Parameters:
+  - KB: The knowledge base to check. In this prototype, it is ignored.
+
+Returns:
+  - The keyword :PROVEN, indicating success."
   ;; In barebones prototype, con_R always applies to an empty KB for simplicity.
   (declare (ignore kb))
   (format t "Proof Thread: Applying con_R axiom - Axiomatically Proven.~%")
   :proven)
 
 (defun axiom-incon-l (kb)
-  "Refutation Axiom (axiom incon_L (incon ())). Minimal implementation."
+  "A minimal implementation of the 'Inconsistency Left' (incon_L) refutation axiom.
+This function simulates an axiomatic refutation. In a real system, it would
+check if the knowledge base (KB) is inherently inconsistent.
+
+Parameters:
+  - KB: The knowledge base to check. In this prototype, it is ignored.
+
+Returns:
+  - The keyword :REFUTED, indicating success."
   ;; In barebones prototype, incon_L always applies to an empty KB for simplicity.
   (declare (ignore kb))
   (format t "Refutation Thread: Applying incon_L axiom - Axiomatically Refuted.~%")
@@ -30,13 +55,30 @@
 ;;; Thread Functions (Proof and Refutation - Minimal for Prototype)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defvar *proof-result* nil "Variable to store proof thread result")
-(defvar *refutation-result* nil "Variable to store refutation thread result")
+(defvar *proof-result* nil
+  "Stores the result from the proof thread.")
+(defvar *refutation-result* nil
+  "Stores the result from the refutation thread.")
 
-(defvar *termination-flag* nil "Flag to signal termination to both threads")
+(defvar *termination-flag* nil
+  "A simple flag used for communication between the prover threads.
+The first thread to complete its task sets this flag, which signals the main
+orchestration loop in `run-prover` to stop waiting and determine a result.")
 
 (defun proof-thread-function ()
-  "Proof Thread: Applies con_R axiom and sets *proof-result*."
+  "The target function for the proof-seeking thread.
+This function simulates a proof attempt by calling the `axiom-con-r` axiom,
+storing the result in `*proof-result*`, and setting the `*termination-flag*`
+to signal completion.
+
+Parameters:
+  - None.
+
+Returns:
+  - Nothing.
+
+Side Effects:
+  - Modifies `*proof-result*` and `*termination-flag*`."
   (format t "Proof Thread: Starting.~%")
   (sleep 1) ; Simulate some work
   (let ((result (axiom-con-r *knowledge-base*)))
@@ -46,7 +88,19 @@
 
 
 (defun refutation-thread-function ()
-  "Refutation Thread: Applies incon_L axiom and sets *refutation-result*."
+  "The target function for the refutation-seeking thread.
+This function simulates a refutation attempt by calling the `axiom-incon-l`
+axiom, storing the result in `*refutation-result*`, and setting the
+`*termination-flag*` to signal completion.
+
+Parameters:
+  - None.
+
+Returns:
+  - Nothing.
+
+Side Effects:
+  - Modifies `*refutation-result*` and `*termination-flag*`."
   (format t "Refutation Thread: Starting.~%")
   (sleep 1.5) ; Simulate slightly different work time
   (let ((result (axiom-incon-l *knowledge-base*)))
@@ -60,11 +114,35 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun initialize-knowledge-base ()
-  "Initializes the global *knowledge-base* (minimal for prototype)."
+  "Resets the `*knowledge-base*` to an empty state.
+This function is called at the beginning of `run-prover` to ensure that each
+run starts with a clean slate.
+
+Parameters:
+  - None.
+
+Returns:
+  - NIL.
+
+Side Effects:
+  - Sets `*knowledge-base*` to `nil`."
   (setf *knowledge-base* nil)) ;; For prototype, KB is initially empty list
 
 (defun run-prover ()
-  "Runs the barebones theorem prover prototype with two threads."
+  "Runs the theorem prover by orchestrating parallel proof and refutation threads.
+
+This function initializes the knowledge base, starts two threads (`proof-thread-function`
+and `refutation-thread-function`) that run in parallel, and waits until one of
+them sets the `*termination-flag*`. The result is determined by which thread
+finishes first.
+
+Parameters:
+  - None.
+
+Returns:
+  - :PROVEN if the proof thread finishes first.
+  - :REFUTED if the refutation thread finishes first.
+  - :UNKNOWN for any other case."
   (format t "Prover: Initializing Knowledge Base.~%")
   (initialize-knowledge-base)
 
@@ -94,6 +172,15 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun main ()
+  "The main entry point for executing the theorem prover prototype.
+This function simply calls `run-prover` and prints the final result to the
+standard output.
+
+Parameters:
+  - None.
+
+Returns:
+  - Nothing."
   (format t "Starting Barebones Theorem Prover Prototype.~%")
   (let ((prover-result (run-prover)))
     (format t "Prover Result: ~A~%" prover-result)

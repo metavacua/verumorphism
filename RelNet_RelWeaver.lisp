@@ -120,7 +120,16 @@
      )
     )
   )
- "RelNet Abstraction of RelNet Weaver Theorem Prover Prototype."
+ "A data structure representing a Relational Network (RelNet) abstraction of the RelNet Weaver theorem prover.
+
+This variable holds a structured representation of the prover's architecture, defining its core components as nodes and their interactions as edges.
+
+- **Node Types:** Include `function`, `data-structure`, `metric`, `axiom`, `rule`, `thread`, and `orchestration`.
+- **Edge Types:** Represent relationships like `uses-data`, `calls`, `implements-rule`, `manages-threads`, and `updates-metric`.
+- **Nodes:** Define specific components of the prover, such as `knowledge-base`, `axiom-con-r`, `proof-thread-function`, etc.
+- **Edges:** Describe the relationships between these nodes, for example, how a rule calls an axiom or updates a complexity metric.
+
+This abstraction is intended for analysis, visualization, and meta-level reasoning about the theorem prover's structure and logic."
  )
 
 *relnet-weaver-abstraction*

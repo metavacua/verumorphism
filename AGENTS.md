@@ -1,41 +1,34 @@
 # Weaver Agent Instructions
 
-This document provides instructions for agents, like Jules, to work with the Weaver project.
+This document provides instructions for AI agents working on the Weaver codebase.
 
 ## Environment Setup
 
-The primary development environment for this project is **Steel Bank Common Lisp (SBCL)**. Dependencies are managed by **Quicklisp**.
+The project is implemented in Common Lisp and requires SBCL and Quicklisp.
 
-To set up the development environment, follow these steps:
-
-1.  **Install SBCL and Quicklisp:**
-    -   Run the `setup.sh` script located in the root of the repository. This will install SBCL and set up Quicklisp in the home directory.
-
-2.  **Load Dependencies:**
-    -   Start an SBCL session.
-    -   Load the project's entry point by executing: `(load "Preamble.lisp")`
-    -   This will automatically:
-        -   Load Quicklisp.
-        -   Download and load the required libraries (`Hunchentoot` and `Jonathan`).
-        -   Start the necessary web servers.
+1.  **SBCL:** The primary Common Lisp implementation. It must be installed on the system. The agent can install it using the appropriate package manager (e.g., `sudo apt-get install -y sbcl`).
+2.  **Quicklisp:** The project uses Quicklisp for managing Lisp library dependencies. The dependencies themselves are loaded via the `QHJ.lisp` file, which is called from the main `Preamble.lisp`.
 
 ## Running the Application
 
-The application is started by loading the `Preamble.lisp` file in an SBCL session:
+The entire system, including the web server, is started by loading the `Preamble.lisp` file into an SBCL instance:
 
-```lisp
-(load "Preamble.lisp")
+```bash
+sbcl --no-sysinit --no-userinit --load Preamble.lisp
 ```
-
-This will start two web servers:
-
-1.  A **Refuter API server** on port 8080.
-2.  A **static file server** for the frontend, also on a specified port.
-
-The `*frontend-directory*` variable in `Preamble.lisp` should point to the directory containing the frontend files. This has been updated to use a relative path.
 
 ## Running Tests
 
-This project does not yet have a formal, automated test suite. However, several files contain example usage and ad-hoc tests that can be run manually. For example, `Weaver_system.lisp` contains a `test-weaver-package` function that can be uncommented and run to test the `weaver-system` package.
+The project contains several test files. To run the primary tests, load them after the main `Preamble.lisp` file:
 
-Future work should include creating a more robust, automated testing framework.
+```bash
+sbcl --no-sysinit --no-userinit --load Preamble.lisp --eval '(load "MacroTests.lisp")' --eval '(load "IdentityCheck1_5.lisp")' --quit
+```
+
+## Project Structure
+
+-   `Preamble.lisp`: Main entry point. Loads all necessary files and starts services.
+-   `refuter-api.lisp`: The Hunchentoot web server and API logic.
+-   `QHJ.lisp` / `refuteloader.lisp`: Scripts for loading Quicklisp dependencies.
+-   `*.lisp`, `*.lsp`, `*.LSD`: Core logic for the theorem prover and refuter.
+-   `index.html`, `style.css`, `script.js`: The static frontend application.

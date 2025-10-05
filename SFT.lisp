@@ -11,22 +11,26 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defpackage #:static-file-tests
-  ;; Use standard CL and Hunchentoot.
-  ;; Import only the necessary symbols from sb-posix to avoid name conflicts.
   (:use #:cl #:hunchentoot)
-  (:import-from #:sb-posix #:chdir #:getcwd) ;; Import chdir and getcwd
-  (:export #:start-test-server #:stop-test-server #:*static-base-directory*)) ;; Export start-test-server, stop-test-server, and *static-base-directory*
+  (:import-from #:sb-posix #:chdir #:getcwd)
+  (:documentation "This package provides a test environment for experimenting with
+Hunchentoot's static file serving capabilities. It is designed to help diagnose
+and understand how Hunchentoot handles absolute and relative file paths,
+particularly in relation to the Lisp process's current working directory (CWD).")
+  (:export #:start-test-server #:stop-test-server #:*static-base-directory*))
 
 (in-package #:static-file-tests)
 
 ;; Global variable to hold the server instance
 (defvar *test-server* nil
-  "Holds the Hunchentoot acceptor instance for the static file tests.")
+  "Holds the active Hunchentoot acceptor instance for the test server.
+This variable is set by `start-test-server` and used by `stop-test-server`.")
 
 ;; Global variable to hold the base directory for static files
 (defvar *static-base-directory* nil
-  "The base directory from which static files will be served.
-   Should be set to an absolute directory pathname.")
+  "Specifies the absolute path to the directory containing the static test
+files (e.g., 'index.html', 'test-absolute.html'). This path is set by
+`start-test-server`.")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Test Handlers
@@ -34,6 +38,9 @@
 
 ;; Handler to serve a file using an ABSOLUTE path constructed from the base directory
 (define-easy-handler (serve-absolute :uri "/test-absolute") ()
+  "A test handler that attempts to serve the 'test-absolute.html' file
+using a fully specified, absolute pathname. This is used to verify the most
+reliable method of file serving."
   (setf (content-type*) "text/html") ;; Assuming HTML test files
 
   (if *static-base-directory*
@@ -59,6 +66,10 @@
 ;; NOTE: This tests the hypothesis that handle-static-file might resolve
 ;; relative paths against the process's CWD.
 (define-easy-handler (serve-relative :uri "/test-relative") ()
+  "A test handler that attempts to serve the 'test-relative.html' file
+using a relative pathname. This test is designed to see if Hunchentoot
+resolves the path against the process's current working directory (CWD),
+which is explicitly set by `start-test-server`."
   (setf (content-type*) "text/html") ;; Assuming HTML test files
 
   (if *static-base-directory*
@@ -83,6 +94,8 @@
 
 ;; Handler to serve the root path, defaulting to index.html using absolute path
 (define-easy-handler (serve-root :uri "/") ()
+  "A test handler for the root URI ('/'). It attempts to serve 'index.html'
+using a fully specified, absolute pathname."
   (setf (content-type*) "text/html") ;; Assuming HTML test files
 
   (if *static-base-directory*
@@ -110,10 +123,24 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun start-test-server (&key (port 8080) (static-dir nil))
-  "Starts the Hunchentoot test server.
-   PORT: The port to listen on (defaults to 8080).
-   STATIC-DIR: The absolute path to the directory containing test files.
-               Sets *static-base-directory* and changes process CWD."
+  "Starts the Hunchentoot test server for static file experiments.
+
+This function sets the base directory for static files, changes the Lisp
+process's current working directory to that directory, and starts a Hunchentoot
+server on the specified port.
+
+Parameters:
+  - PORT (Keyword, Optional): The port number for the server. Defaults to 8080.
+  - STATIC-DIR (Keyword, Optional): The absolute path to the directory containing
+    the static test files. This is a required parameter for the server to function correctly.
+
+Returns:
+  - The Hunchentoot acceptor instance on success, NIL on failure.
+
+Side Effects:
+  - Sets `*static-base-directory*`.
+  - Changes the current working directory.
+  - Starts the Hunchentoot server in a new thread and sets `*test-server*`."
   (format t "~&Starting static file test server...~%")
 
   ;; Set the static base directory and ensure it's an absolute directory pathname
@@ -156,7 +183,12 @@
       nil)))
 
 (defun stop-test-server ()
-  "Stops the running test server."
+  "Stops the running static file test server.
+It checks if `*test-server*` is running and stops it if it is.
+
+Side Effects:
+  - Stops the Hunchentoot server.
+  - Sets `*test-server*` to NIL."
   (when *test-server*
     (format t "~&Stopping test server...~%")
     (stop *test-server*)

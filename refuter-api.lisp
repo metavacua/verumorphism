@@ -6,12 +6,17 @@
 
 ;; Define a package for the API code to avoid conflicts
 (defpackage #:refuter-api
-  ;; Use standard CL and Hunchentoot, Jonathan for JSON.
-  ;; Import necessary symbols from sb-posix for file system operations.
   (:use #:cl #:hunchentoot #:jonathan)
-  (:import-from #:sb-posix #:chdir #:getcwd) ;; Import chdir and getcwd from sb-posix
-  (:export #:start-refuter-api #:stop-refuter-api #:*frontend-directory*
-           #:restart-refuter-api #:*api-server* #:*refuter-api-file-path*)) ;; Export the new restart function, *api-server*, and the file path variable
+  (:import-from #:sb-posix #:chdir #:getcwd)
+  (:documentation "This package provides the web backend for the Refuter application.
+It uses the Hunchentoot web server to serve a static frontend and to provide a
+JSON-based API for refutation logic.")
+  (:export #:start-refuter-api
+           #:stop-refuter-api
+           #:*frontend-directory*
+           #:restart-refuter-api
+           #:*api-server*
+           #:*refuter-api-file-path*))
 
 (in-package #:refuter-api)
 
@@ -22,18 +27,21 @@
 ;; Define a global variable to hold the path to the frontend files directory.
 ;; Defaults to the current working directory unless explicitly set before starting the server.
 (defvar *frontend-directory* nil
-  "The path to the directory containing the frontend HTML, CSS, and JS files.
-   Defaults to the current working directory if NIL when START-REFUTER-API is called.")
+  "Specifies the absolute path to the directory containing the frontend static
+files (HTML, CSS, JS). If not set, it defaults to the current working
+directory when `start-refuter-api` is called.")
 
 ;; Define a global variable to hold the current server instance.
 ;; This is used by the restart function to stop a running server.
 (defvar *api-server* nil
-  "Holds the current Hunchentoot acceptor instance for the refuter API.")
+  "Holds the active Hunchentoot server acceptor instance. This variable is set
+by `start-refuter-api` and used by other functions to control the server.")
 
 ;; Define a global variable to store the path of this API file once loaded.
 ;; Used by restart-refuter-api. This variable should be set by the loading process (e.g., a setup script).
 (defvar *refuter-api-file-path* nil
-  "Stores the pathname of the refuter-api.lisp file after it has been loaded.")
+  "Stores the absolute pathname of this script file. This is intended to be set
+by the loading script and is used by `restart-refuter-api` to reload the file.")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; API Endpoint Handler
@@ -42,6 +50,16 @@
 ;; Define the API endpoint handler for the /refute URI
 ;; It accepts only POST requests.
 (define-easy-handler (refute-endpoint :uri '("/refute" :post)) ()
+  "The main API endpoint for submitting a formula to be refuted.
+It accepts a POST request with a JSON body containing a 'formula' key.
+This handler contains placeholder logic to simulate a refutation.
+
+Request Body (JSON):
+  - `formula`: A string representing the formula to be refuted.
+
+Returns:
+  - A JSON object indicating the status of the refutation. On success, it
+    includes a boolean `refuted` field."
   ;; Set the content type of the response to indicate JSON
   (setf (content-type*) "application/json")
 
@@ -93,9 +111,13 @@
 ;; This handler will attempt to serve files for any request that doesn't match
 ;; other defined handlers (like /refute).
 (define-easy-handler (static-file-handler :uri (lambda (uri)
-                                                 ;; This lambda function checks if the URI is NOT the API endpoint.
-                                                 ;; If it's not /refute, this handler is a potential match.
                                                  (not (string= uri "/refute")))) ()
+  "A handler to serve static files for any URI that is not an API endpoint.
+It serves files relative to the `*frontend-directory*`. This handler relies
+on the server's current working directory being set to `*frontend-directory*`
+by `start-refuter-api` to correctly resolve relative paths.
+
+If the requested URI is '/', it serves 'index.html'."
   ;; Check if the frontend directory has been set (or defaulted)
   (if *frontend-directory*
       (let ((requested-uri (request-uri*)))
@@ -133,10 +155,24 @@
 ;; **MODIFIED:** Adds chdir to *frontend-directory* for relative pathname handling fix.
 ;; **FIXED:** Corrected the scope of dir-string in the LET form.
 (defun start-refuter-api (&key (port 8080))
-  "Starts the Hunchentoot web server for the refuter API and serves frontend files.
-   Defaults *frontend-directory* to the current working directory if it's NIL.
-   Includes error handling for 'address in use'.
-   Changes the process's CWD to *frontend-directory* for relative path handling."
+  "Starts the Hunchentoot web server for the refuter API.
+
+This function initializes the server, sets up the frontend directory, changes the
+process's current working directory to the frontend directory to ensure static
+files are served correctly, and starts listening on the specified port.
+
+Parameters:
+  - PORT (Keyword, Optional): The port number for the server to listen on. Defaults to 8080.
+
+Returns:
+  - The Hunchentoot acceptor instance on success.
+  - NIL on failure (e.g., if the port is already in use).
+
+Side Effects:
+  - Starts the Hunchentoot server in a new thread.
+  - Sets the `*api-server*` global variable.
+  - May modify `*frontend-directory*` if it's not already set.
+  - Changes the Lisp process's current working directory."
   ;; If *frontend-directory* is NIL, set it to the current working directory.
   (when (null *frontend-directory*)
     ;; Use truename to get the absolute, resolved path of the current directory
@@ -183,7 +219,13 @@
 
 ;; Function to stop a running Hunchentoot server acceptor instance
 (defun stop-refuter-api (acceptor)
-  "Stops the specified Hunchentoot web server acceptor instance if it is not NIL."
+  "Stops a given Hunchentoot server acceptor instance.
+
+Parameters:
+  - ACCEPTOR: The server instance to stop, as stored in `*api-server*`.
+
+Returns:
+  - T on successful stop, NIL on error."
   (format t "stop-refuter-api called with acceptor: ~A~%" acceptor) ;; Debugging output
   (when acceptor ;; Check if the acceptor is not NIL before attempting to stop
     (format t "Attempting to stop Hunchentoot acceptor...~%") ;; Debugging output
@@ -200,13 +242,17 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun restart-refuter-api (&key (port 8080))
-  "Stops the current refuter API server if running, reloads the source file,
-   and starts a new server instance. Uses the path stored in *refuter-api-file-path*
-   to reload the file.
-   **MODIFIED:** Calls start-refuter-api which now handles CWD change.
-   **NOTE:** The compiler warning about 'SOURCE-FILE' here is likely spurious,
-   as it's a local variable correctly used within the LET form.
-   Ensure *refuter-api-file-path* is set by your loading process."
+  "A developer convenience function to stop, reload, and restart the server.
+This function stops the currently running server, reloads this source file from
+the path stored in `*refuter-api-file-path*`, and then starts a new server
+instance on the specified port.
+
+Parameters:
+  - PORT (Keyword, Optional): The port for the new server instance. Defaults to 8080.
+
+Side Effects:
+  - Stops and starts the web server.
+  - Reloads the source file, applying any code changes."
   (format t "Attempting to restart Refuter API...~%") ;; Debugging output
   (format t "Current *api-server* state: ~A~%" *api-server*) ;; Debugging output
   (format t "Is *api-server* started? ~A~%" (and *api-server* (started-p *api-server*))) ;; Debugging output
