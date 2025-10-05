@@ -1,3 +1,20 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;; Macro Test Suite
+;;;
+;;; This file serves as a comprehensive test suite to demonstrate and verify the
+;;; behavior of Common Lisp macros across different lexical scopes. It explores
+;;; how macros defined at the global level and within local scopes (`defun`,
+;;; `let`, `block`, `labels`) are expanded and used.
+;;;
+;;; The primary purpose is to confirm that macros defined within a local scope
+;;; are not accessible outside of that scope, which is a fundamental property
+;;; of lexical scoping in Common Lisp. Each section tests a different scope,
+;;; attempting both correct local usage and incorrect global usage to trigger
+;;; expected errors.
+;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 ;;; --- Refocused Macro Test Suite (Comprehensive Basis Testing) ---
 
 (format t ";;; --- Refocused Macro Test Suite (Comprehensive Basis Testing) --- ~%")
@@ -10,6 +27,7 @@
 
 ;; 1.1. Global Macro Definition and Expansion
 (defmacro global-macro-test-1 (x)
+  "A simple global macro that multiplies its argument by 2."
   `(* ,x 2))
 (format t "~%1.1. Global Macro Definition: GLOBAL-MACRO-TEST-1 defined.~%")
 (format t "~%1.1a. MACROEXPAND-1 of (global-macro-test-1 7) in global scope:~%")
@@ -32,6 +50,9 @@
 
 ;; 2.1. Macro Definition within Function and Expansion
 (defun func-macro-test-outer ()
+  "Defines a local macro `func-local-macro-test-1` and tests its scope.
+  This function demonstrates that a macro defined with `defmacro` inside a `defun`
+  has local scope and is not accessible outside of this function."
   (defmacro func-local-macro-test-1 (x)
     `(/ ,x 2))
   (format t "~%2.1. Function-Local Macro Definition: FUNC-LOCAL-MACRO-TEST-1 defined within function.~%")
@@ -61,6 +82,7 @@
 ;; 3.1. Macro Definition within LET and Expansion
 (let ()
   (defmacro let-local-macro-test-1 (x)
+    "A macro defined locally within a LET block that adds 3 to its argument."
     `(+ ,x 3))
   (format t "~%3.1. LET-Local Macro Definition: LET-LOCAL-MACRO-TEST-1 defined within LET.~%")
   (format t "~%3.1a. MACROEXPAND-1 of (let-local-macro-test-1 15) within LET scope:~%")
@@ -85,6 +107,7 @@
 ;; 4.1. Macro Definition within BLOCK and Expansion
 (block test-block-macro
   (defmacro block-local-macro-test-1 (x)
+    "A macro defined locally within a BLOCK that multiplies its argument by 4."
     `(* ,x 4))
   (format t "~%4.1. BLOCK-Local Macro Definition: BLOCK-LOCAL-MACRO-TEST-1 defined within BLOCK.~%")
   (format t "~%4.1a. MACROEXPAND-1 of (block-local-macro-test-1 18) within BLOCK scope:~%")
@@ -110,6 +133,7 @@
 ;; 5.1. Macro Definition within LABELS and Expansion
 (labels ()
   (defmacro labels-local-macro-test-1 (x)
+    "A macro defined locally within a LABELS block that adds 5 to its argument."
     `(+ ,x 5))
   (format t "~%5.1. LABELS-Local Macro Definition: LABELS-LOCAL-MACRO-TEST-1 defined within LABELS.~%")
   (format t "~%5.1a. MACROEXPAND-1 of (labels-local-macro-test-1 21) within LABELS scope:~%")

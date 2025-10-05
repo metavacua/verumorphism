@@ -1,13 +1,25 @@
 (defstruct rule
-  name
-  type
-  calculus-type
-  operator
-  direction
-  input-sequent
-  output-sequent
-  premise-condition
-  description)
+  "Represents an axiom or inference rule in the hypersequent calculus.
+
+Slots:
+  - NAME: The symbolic name of the rule (e.g., 'con_R).
+  - TYPE: The type of rule, e.g., :axiom, :sequent-rule, :hypersequent-rule.
+  - CALCULUS-TYPE: The specific calculus this rule belongs to.
+  - OPERATOR: The logical operator this rule applies to (e.g., :con, :dep).
+  - DIRECTION: The direction of the rule application (:left or :right), if applicable.
+  - INPUT-SEQUENT: The pattern for the input sequent(s) that this rule matches.
+  - OUTPUT-SEQUENT: The pattern for the sequent produced by this rule.
+  - PREMISE-CONDITION: A lisp form that is evaluated to check if the premises for the rule hold.
+  - DESCRIPTION: A human-readable description of the rule."
+  name
+  type
+  calculus-type
+  operator
+  direction
+  input-sequent
+  output-sequent
+  premise-condition
+  description)
 
 (defparameter con_r-rule
   (make-rule
@@ -107,9 +119,21 @@
 (print dependence_l_depL-rule)
 
 (defun entails (sequent)
-  (format t "Entails called with sequent: ~S~%" sequent)  ; Debugging print
+  "The core proof search function of the theorem prover.
+It determines if a given sequent is provable ('entailed') by the defined set of
+axioms and inference rules. It works by recursively trying to match the sequent
+against the output of axioms or the input of rules. For rules with premises,
+it recursively calls itself to check if the premises hold.
 
-  ;; 1. Check Axioms (con_R and incon_l)
+Parameters:
+  - SEQUENT: The sequent to be proven, represented as a list.
+
+Returns:
+  - T if the sequent is provable.
+  - NIL otherwise."
+  (format t "Entails called with sequent: ~S~%" sequent)  ; Debugging print
+
+  ;; 1. Check Axioms (con_R and incon_l)
   (if (sequent-equal sequent (rule-output-sequent con_r-rule))
       (progn
         (format t "  Matched axiom: con_r~%")  ; Debugging print
@@ -213,19 +237,33 @@
 
 ;; Function to check if a symbol is a variable (starts with '?') - No change
 (defun variablep (symbol)
-  (and (symbolp symbol)
-       (char= (char (symbol-name symbol) 0) #\?)))
+  "Checks if a given symbol is a variable.
+Variables are denoted by a '?' prefix, e.g., ?A."
+  (and (symbolp symbol)
+       (char= (char (symbol-name symbol) 0) #\?)))
 
 ;; Function to match patterns (basic version - needs more robustness later) - No change
 (defun pattern-match (pattern input bindings)
-  (cond ((equal pattern input) bindings)
-        ((variablep pattern) (if (assoc pattern bindings)
-                                   (if (equal (cdr (assoc pattern bindings)) input) bindings nil)
-                                   (acons pattern input bindings)))
-        ((and (consp pattern) (consp input)
-              (pattern-match (car pattern) (car input) bindings))
-         (pattern-match (cdr pattern) (cdr input) (pattern-match (car pattern) (car input) bindings)))
-        (t nil)))
+  "Matches a pattern against an input, returning a list of variable bindings.
+This is a core utility for the rule-based prover to determine if a rule can be
+applied to a given sequent.
+
+Parameters:
+  - PATTERN: The pattern to match against, may contain variables (e.g., '(?A b c)').
+  - INPUT: The concrete data to be matched (e.g., '(a b c)').
+  - BINDINGS: An initial association list of bindings.
+
+Returns:
+  - An association list of bindings if the match is successful.
+  - NIL if the match fails."
+  (cond ((equal pattern input) bindings)
+        ((variablep pattern) (if (assoc pattern bindings)
+                                 (if (equal (cdr (assoc pattern bindings)) input) bindings nil)
+                                 (acons pattern input bindings)))
+        ((and (consp pattern) (consp input)
+              (pattern-match (car pattern) (car input) bindings))
+         (pattern-match (cdr pattern) (cdr input) (pattern-match (car pattern) (car input) bindings)))
+        (t nil)))
 
 
 ;;;; Unit Tests for Pattern Matching and Substitution ;;;;
@@ -233,7 +271,8 @@
 ;;; 1. Unit Tests for pattern-match function ;;;
 
 (defun run-pattern-match-tests ()
-  (test-description "Pattern Match Tests")
+  "Runs a suite of unit tests for the `pattern-match` function."
+  (test-description "Pattern Match Tests")
   (test-pattern-match-exact-match)
   (test-pattern-match-variable-binding)
   (test-pattern-match-variable-binding-existing)
@@ -243,95 +282,110 @@
   (test-pattern-match-variable-order-recursive))  ; Added test for variable order in recursive match
 
 (defun test-description (description)
-  (format t ";;;; ~A ;;;;~%" description))
+  "Prints a formatted header for a test section."
+  (format t ";;;; ~A ;;;;~%" description))
 
 (defun test-pattern-match-exact-match ()
-  (let ((pattern '(a b c))
-        (input '(a b c)))
-    (assert-equal (pattern-match pattern input nil) nil "Exact Match Test Failed")))
+  "Tests if `pattern-match` succeeds with an empty binding list for identical inputs."
+  (let ((pattern '(a b c))
+        (input '(a b c)))
+    (assert-equal (pattern-match pattern input nil) nil "Exact Match Test Failed")))
 
 (defun test-pattern-match-variable-binding ()
-  (let ((pattern '(?x b c))
-        (input '(a b c))
-        (expected-bindings '((?x . a))))
-    (assert-bindings-equal (pattern-match pattern input nil) expected-bindings "Variable Binding Test Failed")))
+  "Tests basic variable binding."
+  (let ((pattern '(?x b c))
+        (input '(a b c))
+        (expected-bindings '((?x . a))))
+    (assert-bindings-equal (pattern-match pattern input nil) expected-bindings "Variable Binding Test Failed")))
 
 (defun test-pattern-match-variable-binding-existing ()
-  (let ((pattern '(?x b c))
-        (input '(a b c))
-        (initial-bindings '((?x . a)))
-        (expected-bindings '((?x . a))))
-    (assert-bindings-equal (pattern-match pattern input initial-bindings) expected-bindings "Existing Variable Binding Test Failed")))
+  "Tests matching with a pre-existing, consistent variable binding."
+  (let ((pattern '(?x b c))
+        (input '(a b c))
+        (initial-bindings '((?x . a)))
+        (expected-bindings '((?x . a))))
+    (assert-bindings-equal (pattern-match pattern input initial-bindings) expected-bindings "Existing Variable Binding Test Failed")))
 
 (defun test-pattern-match-recursive-match ()
-  (let ((pattern '((?x) b (?y)))
-        (input '((a) b (c)))
-        (expected-bindings '((?x . a) (?y . c))))
-    (assert-bindings-equal (pattern-match pattern input nil) expected-bindings "Recursive Match Test Failed")))
+  "Tests pattern matching on nested list structures."
+  (let ((pattern '((?x) b (?y)))
+        (input '((a) b (c)))
+        (expected-bindings '((?x . a) (?y . c))))
+    (assert-bindings-equal (pattern-match pattern input nil) expected-bindings "Recursive Match Test Failed")))
 
 (defun test-pattern-match-no-match ()
-  (let ((pattern '(a b d))
-        (input '(a b c)))
-    (assert-equal (pattern-match pattern input nil) nil "No Match Test Failed")))
+  "Tests a case where the pattern and input cannot match."
+  (let ((pattern '(a b d))
+        (input '(a b c)))
+    (assert-equal (pattern-match pattern input nil) nil "No Match Test Failed")))
 
 (defun test-pattern-match-mismatch-variable-binding ()
-  (let ((pattern '(?x b c))
-        (input '(d b c))
-        (initial-bindings '((?x . a))))
-    (assert-equal (pattern-match pattern input initial-bindings) nil "Mismatch Variable Binding Test Failed")))
+  "Tests a case where the input conflicts with a pre-existing binding."
+  (let ((pattern '(?x b c))
+        (input '(d b c))
+        (initial-bindings '((?x . a))))
+    (assert-equal (pattern-match pattern input initial-bindings) nil "Mismatch Variable Binding Test Failed")))
 
 (defun test-pattern-match-variable-order-recursive ()
-  (let ((pattern '((?y) b (?x)))  ; Variables in different order than input
-        (input '((a) b (c)))
-        (expected-bindings '((?y . a) (?x . c))))
-    (assert-bindings-equal (pattern-match pattern input nil) expected-bindings "Variable Order Recursive Match Test Failed")))
+  "Tests that variable binding order in the pattern does not affect the result."
+  (let ((pattern '((?y) b (?x)))  ; Variables in different order than input
+        (input '((a) b (c)))
+        (expected-bindings '((?y . a) (?x . c))))
+    (assert-bindings-equal (pattern-match pattern input nil) expected-bindings "Variable Order Recursive Match Test Failed")))
 
 
 ;;; 2. Unit Tests for substitute-bindings function ;;;
 
 (defun run-substitute-bindings-tests ()
-  (test-description "Substitute Bindings Tests")
+  "Runs a suite of unit tests for the `substitute-bindings` function."
+  (test-description "Substitute Bindings Tests")
   (test-substitute-bindings-variable-substitution)
   (test-substitute-bindings-recursive-substitution)
   (test-substitute-bindings-no-substitution)
   (test-substitute-bindings-mixed-substitution))
 
 (defun test-substitute-bindings-variable-substitution ()
-  (let ((template '(?x b c))
-        (bindings '((?x . a)))
-        (expected-output '(a b c)))
-    (assert-equal (substitute-bindings template bindings) expected-output "Variable Substitution Test Failed")))
+  "Tests basic substitution of a single variable."
+  (let ((template '(?x b c))
+        (bindings '((?x . a)))
+        (expected-output '(a b c)))
+    (assert-equal (substitute-bindings template bindings) expected-output "Variable Substitution Test Failed")))
 
 (defun test-substitute-bindings-recursive-substitution ()
-  (let ((template '((?x) b (?y)))
-        (bindings '((?x . a) (?y . c)))
-        (expected-output '((a) b (c))))
-    (assert-equal (substitute-bindings template bindings) expected-output "Recursive Substitution Test Failed")))
+  "Tests substitution in a nested list structure."
+  (let ((template '((?x) b (?y)))
+        (bindings '((?x . a) (?y . c)))
+        (expected-output '((a) b (c))))
+    (assert-equal (substitute-bindings template bindings) expected-output "Recursive Substitution Test Failed")))
 
 (defun test-substitute-bindings-no-substitution ()
-  (let ((template '(a b c))
-        (bindings '((?x . a)))
-        (expected-output '(a b c)))
-    (assert-equal (substitute-bindings template bindings) expected-output "No Substitution Test Failed")))
+  "Tests that the template is unchanged when no variables match the bindings."
+  (let ((template '(a b c))
+        (bindings '((?x . a)))
+        (expected-output '(a b c)))
+    (assert-equal (substitute-bindings template bindings) expected-output "No Substitution Test Failed")))
 
 (defun test-substitute-bindings-mixed-substitution ()
-  (let ((template '((?x) b literal (?y)))
-        (bindings '((?x . a) (?y . c)))
-        (expected-output '((a) b literal (c))))
-    (assert-equal (substitute-bindings template bindings) expected-output "Mixed Substitution Test Failed")))
+  "Tests substitution in a template with both variables and literal atoms."
+  (let ((template '((?x) b literal (?y)))
+        (bindings '((?x . a) (?y . c)))
+        (expected-output '((a) b literal (c))))
+    (assert-equal (substitute-bindings template bindings) expected-output "Mixed Substitution Test Failed")))
 
 
 ;;; 3. Assertion Helper Functions ;;;
 
 (defun assert-equal (actual expected test-name)
-  (if (equal actual expected)
-      (format t "~A: PASS~%" test-name)
-      (format t "~A: FAIL - Expected:~%  ~S~%Actual:~%  ~S~%" test-name expected actual)))
+  "A simple assertion helper that checks for `equal`ity between two values."
+  (if (equal actual expected)
+      (format t "~A: PASS~%" test-name)
+      (format t "~A: FAIL - Expected:~%  ~S~%Actual:~%  ~S~%" test-name expected actual)))
 
 (defun assert-bindings-equal (actual expected test-name)
-  (if (equalp actual expected) ; Using equalp for bindings comparison
-      (format t "~A: PASS~%" test-name)
-      (format t "~A: FAIL - Expected Bindings:~%  ~S~%Actual Bindings:~%  ~S~%Actual Bindings:~%  ~S~%" test-name expected actual actual)))
+  "An assertion helper for comparing binding lists. It is order-insensitive."
+  (if (equalp actual expected) ; Using equalp for bindings comparison
+      (format t "~A: PASS~%" test-name)
+      (format t "~A: FAIL - Expected Bindings:~%  ~S~%Actual Bindings:~%  ~S~%" test-name expected actual)))
 
 
 ;;; 4. Run all tests ;;;
@@ -340,7 +394,8 @@
 
 
 (defun run-entails-tests ()
-  (test-description "Entails Function Tests")
+  "Runs a suite of unit tests for the `entails` function."
+  (test-description "Entails Function Tests")
   (test-entails-con_r-axiom)
   (test-entails-incon_l-axiom)
   (test-entails-duality_r_dualR)
@@ -356,56 +411,66 @@
 ;;; 1. Test cases for Axioms ;;;
 
 (defun test-entails-con_r-axiom ()
-  (let ((sequent '(() con)))
-    (assert-equal (entails sequent) t "Entails con_R Axiom Test Failed")))
+  "Tests if `entails` correctly identifies the con_R axiom."
+  (let ((sequent '(() con)))
+    (assert-equal (entails sequent) t "Entails con_R Axiom Test Failed")))
 
 (defun test-entails-incon_l-axiom ()
-  (let ((sequent '((incon) ())))
-    (assert-equal (entails sequent) t "Entails incon_l Axiom Test Failed")))
+  "Tests if `entails` correctly identifies the incon_L axiom."
+  (let ((sequent '((incon) ())))
+    (assert-equal (entails sequent) t "Entails incon_l Axiom Test Failed")))
 
 
 ;;; 2. Test cases for Duality Rules ;;;
 
 (defun test-entails-duality_r_dualR ()
-  (let ((sequent '(() (dual incon))))  ; Applying duality_r to incon_l axiom
-    (assert-equal (entails sequent) t "Entails duality_r_dualR Rule Test Failed")))
+  "Tests the dualR rule by applying it to the incon_L axiom."
+  (let ((sequent '(() (dual incon))))  ; Applying duality_r to incon_l axiom
+    (assert-equal (entails sequent) t "Entails duality_r_dualR Rule Test Failed")))
 
 (defun test-entails-duality_l_dualL ()
-  (let ((sequent '((con) ())))        ; Applying duality_l to con_r axiom
-    (assert-equal (entails sequent) t "Entails duality_l_dualL Rule Test Failed")))
+  "Tests the dualL rule by applying it to the con_R axiom."
+  (let ((sequent '((con) ())))        ; Applying duality_l to con_r axiom
+    (assert-equal (entails sequent) t "Entails duality_l_dualL Rule Test Failed")))
 
 (defun test-entails-provable-duality_r_duality_l ()
-  (let ((sequent '(() (dual con))))  ; Provable using duality_r and con_r axiom
-    (assert-equal (entails sequent) t "Entails Provable Duality Rules Test Failed")))
+  "Tests a provable sequent using a combination of duality rules."
+  (let ((sequent '(() (dual con))))  ; Provable using duality_r and con_r axiom
+    (assert-equal (entails sequent) t "Entails Provable Duality Rules Test Failed")))
 
 
 ;;; 3. Test cases for Independence Rules ;;;
 
 (defun test-entails-independence_r_indepR ()
-  (let ((sequent '(() (indep con incon))))  ; Applying indep_r, where entails(con) is true
-    (assert-equal (entails sequent) t "Entails independence_r_indepR Rule Test Failed")))
+  "Tests the indepR rule where one premise is provable."
+  (let ((sequent '(() (indep con incon))))  ; Applying indep_r, where entails(con) is true
+    (assert-equal (entails sequent) t "Entails independence_r_indepR Rule Test Failed")))
 
 (defun test-entails-independence_l_indepL ()
-  (let ((sequent '(((indep incon incon) ()))) )  ; Applying indep_l, where entails(incon) is true
-    (assert-equal (entails sequent) t "Entails independence_l_indepL Rule Test Failed")))
+  "Tests the indepL rule where one premise is refutable."
+  (let ((sequent '(((indep incon incon) ()))))  ; Applying indep_l, where entails(incon) is true
+    (assert-equal (entails sequent) t "Entails independence_l_indepL Rule Test Failed")))
 
 
 ;;; 4. Test cases for Dependence Rules ;;;
 
 (defun test-entails-dependence_r_depR ()
-  (let ((sequent '(() (dep con con))))  ; Applying dep_r, where entails(con) and entails(con) are true
-    (assert-equal (entails sequent) t "Entails dependence_r_depR Rule Test Failed")))
+  "Tests the depR rule where both premises are provable."
+  (let ((sequent '(() (dep con con))))  ; Applying dep_r, where entails(con) and entails(con) are true
+    (assert-equal (entails sequent) t "Entails dependence_r_depR Rule Test Failed")))
 
 (defun test-entails-dependence_l_depL ()
-  (let ((sequent '(((dep incon incon) ()))) )  ; Applying dep_l, where entails(incon) is true
-    (assert-equal (entails sequent) t "Entails dependence_l_depL Rule Test Failed")))
+  "Tests the depL rule where both premises are refutable."
+  (let ((sequent '(((dep incon incon) ()))))  ; Applying dep_l, where entails(incon) is true
+    (assert-equal (entails sequent) t "Entails dependence_l_depL Rule Test Failed")))
 
 
 ;;; 5. Test case for non-provability ;;;
 
 (defun test-entails-not-provable ()
-  (let ((sequent '(() (dep con incon))))  ;  Not provable with current rules alone (dependence needs both to be provable)
-    (assert-equal (entails sequent) nil "Entails Not Provable Test Failed")))
+  "Tests a sequent that should not be provable with the current rules."
+  (let ((sequent '(() (dep con incon))))   ;  Not provable with current rules alone (dependence needs both to be provable)
+    (assert-equal (entails sequent) nil "Entails Not Provable Test Failed")))
 
 
 ;;; --- Run all tests --- ;;;

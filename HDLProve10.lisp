@@ -4,22 +4,43 @@
 
 (defclass relnet-node ()
   ((name :initarg :name :accessor relnet-node-name)
-   (type :initarg :type :accessor relnet-node-type)))
+   (type :initarg :type :accessor relnet-node-type))
+  (:documentation "Represents a node in the relational network, enhanced with a type.
 
-(defvar *knowledge-base* nil "Global Knowledge Base (Minimal for Prototype)")
+Slots:
+  - NAME: The symbolic name of the node.
+  - TYPE: The type of the node (e.g., 'formula', 'term')."))
+
+(defvar *knowledge-base* nil
+  "The global knowledge base for the prover. In this prototype, it is not
+used beyond being passed to axiom and rule functions.")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Axioms (con_R and incon_L - Minimal for Prototype)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun axiom-con-r (kb)
-  "Proof Axiom (axiom con_R (() con)). Minimal implementation."
+  "A minimal implementation of the 'Consistency Right' (con_R) proof axiom.
+In this test-focused version, it unconditionally returns :proven.
+
+Parameters:
+  - KB: The knowledge base (ignored).
+
+Returns:
+  - The keyword :PROVEN."
   (declare (ignore kb))
   (format t "Proof Thread: Applying con_R axiom - Axiomatically Proven.~%")
   :proven)
 
 (defun axiom-incon-l (kb)
-  "Refutation Axiom (axiom incon_L (incon ())). Minimal implementation."
+  "A minimal implementation of the 'Inconsistency Left' (incon_L) refutation axiom.
+In this test-focused version, it unconditionally returns :refuted.
+
+Parameters:
+  - KB: The knowledge base (ignored).
+
+Returns:
+  - The keyword :REFUTED."
   (declare (ignore kb))
   (format t "Refutation Thread: Applying incon_L axiom - Axiomatically Refuted.~%")
   :refuted)
@@ -30,7 +51,15 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun rule-dependence-r (kb)
-  "Dependence Right Rule (rule *DEP*R). Testable version."
+  "Simulates the 'Dependence Right' (*DEP*R) rule.
+This version attempts to prove two premises by calling `axiom-con-r` for both.
+It succeeds if both premises are proven.
+
+Parameters:
+  - KB: The knowledge base.
+
+Returns:
+  - :RULE-APPLIED on success, NIL on failure."
   (format t "Proof Thread: Attempting rule *DEP*R (Dependence Right).~%")
   (let ((proof1-result (axiom-con-r kb))
         (proof2-result (axiom-con-r kb)))
@@ -43,7 +72,15 @@
           nil))))
 
 (defun rule-dependence-l (kb)
-  "Dependence Left Rule (rule *DEP*L). Testable version."
+  "Simulates the 'Dependence Left' (*DEP*L) rule.
+This version attempts to refute two premises by calling `axiom-incon-l` for both.
+It succeeds if both premises are refuted.
+
+Parameters:
+  - KB: The knowledge base.
+
+Returns:
+  - :RULE-APPLIED on success, NIL on failure."
   (format t "Refutation Thread: Attempting rule *DEP*L (Dependence Left).~%")
   (let ((refute1-result (axiom-incon-l kb))
         (refute2-result (axiom-incon-l kb)))
@@ -56,7 +93,20 @@
           nil))))
 
 (defun rule-independence-r (kb &key axiom-con)
-  "Independence Right Rule (rule *IND*R) - THREADED. Testable version."
+  "Simulates the 'Independence Right' (*IND*R) rule using parallel threads.
+This version attempts to prove one of two premises by spawning separate threads
+for each. It represents a logical OR and succeeds if either thread finds a proof.
+
+Parameters:
+  - KB: The knowledge base.
+  - AXIOM-CON (Keyword, Optional): A function to use for proving premises,
+    defaults to `axiom-con-r`.
+
+Returns:
+  - Multiple values:
+    1. :RULE-APPLIED on success, NIL on failure.
+    2. A keyword indicating which premise succeeded (:premise1-satisfied or
+       :premise2-satisfied)."
   (format t "Proof Thread: Attempting rule *IND*R (Independence Right) - THREADED.~%")
   (let ((premise1-result nil)
         (premise2-result nil)
@@ -95,7 +145,20 @@
 
 
 (defun rule-independence-l (kb &key axiom-incon)
-  "Independence Left Rule (rule *IND*L) - THREADED. Testable version."
+  "Simulates the 'Independence Left' (*IND*L) rule using parallel threads.
+This version attempts to refute one of two premises by spawning separate threads
+for each. It represents a logical OR and succeeds if either thread finds a refutation.
+
+Parameters:
+  - KB: The knowledge base.
+  - AXIOM-INCON (Keyword, Optional): A function to use for refuting premises,
+    defaults to `axiom-incon-l`.
+
+Returns:
+  - Multiple values:
+    1. :RULE-APPLIED on success, NIL on failure.
+    2. A keyword indicating which premise succeeded (:premise1-satisfied or
+       :premise2-satisfied)."
   (format t "Refutation Thread: Attempting rule *IND*L (Independence Left) - THREADED.~%")
   (let ((premise1-result nil)
         (premise2-result nil)
@@ -138,13 +201,22 @@
 ;;; Thread Functions (Proof and Refutation - Minimal for Prototype)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defvar *proof-result* nil "Variable to store proof thread result")
-(defvar *refutation-result* nil "Variable to store refutation thread result")
-(defvar *termination-flag* nil "Flag to signal termination to both threads")
+(defvar *proof-result* nil
+  "Holds the result from the proof thread.")
+(defvar *refutation-result* nil
+  "Holds the result from the refutation thread.")
+(defvar *termination-flag* nil
+  "A flag to coordinate the termination of the proof and refutation threads.")
 
 
 (defun proof-thread-function ()
-  "Proof Thread: Applies con_R, *DEP*R and *IND*R rules, sets *proof-result*."
+  "The main function for the proof-seeking thread.
+It sequentially tries to apply the `con_R` axiom, the `*DEP*R` rule, and the
+threaded `*IND*R` rule. If any succeed, it sets the `*proof-result*` and
+`*termination-flag*` and exits.
+
+Returns:
+  - :PROVEN on success, :UNKNOWN on failure."
   (format t "Proof Thread: Starting.~%")
   ;; (sleep 1) ; REMOVED SLEEP CALL
 
@@ -185,7 +257,13 @@
 
 
 (defun refutation-thread-function ()
-  "Refutation Thread: Applies incon_L, *DEP*L and *IND*L rules, sets *refutation-result*."
+  "The main function for the refutation-seeking thread.
+It sequentially tries to apply the `incon_L` axiom, the `*DEP*L` rule, and the
+threaded `*IND*L` rule. If any succeed, it sets the `*refutation-result*` and
+`*termination-flag*` and exits.
+
+Returns:
+  - :REFUTED on success, :UNKNOWN on failure."
   (format t "Refutation Thread: Starting.~%")
   ;; (sleep 1.5)  ; REMOVED SLEEP CALL
 
@@ -229,11 +307,19 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun initialize-knowledge-base ()
-  "Initializes the global *knowledge-base* (minimal for prototype)."
+  "Resets the `*knowledge-base*` to an empty state."
   (setf *knowledge-base* nil))
 
 (defun run-prover ()
-  "Runs the barebones theorem prover prototype with two threads."
+  "Runs the theorem prover by orchestrating parallel proof and refutation threads.
+This function initializes the knowledge base, starts the two threads, and waits
+until one of them sets the `*termination-flag*`. The result is determined by
+which thread finishes first.
+
+Returns:
+  - :PROVEN if the proof thread finishes first.
+  - :REFUTED if the refutation thread finishes first.
+  - :UNKNOWN for any other case."
   (format t "Prover: Initializing Knowledge Base.~%")
   (initialize-knowledge-base)
 
@@ -380,6 +466,10 @@
 
 
 (defun test-rule-independence-r-early-exit-premise1 ()
+  "Tests `rule-independence-r` for a successful result.
+NOTE: With the move to parallel threads, testing for 'early exit' by checking
+if the second premise function was called is no longer reliable, as both threads
+are spawned regardless. This test now confirms a successful application."
   (let ((axiom-con-count 0)
         (premise2-evaluated-flag nil))
 
@@ -443,6 +533,10 @@
 
 
 (defun test-rule-independence-l-early-exit-premise1 ()
+  "Tests `rule-independence-l` for a successful result.
+NOTE: With the move to parallel threads, testing for 'early exit' by checking
+if the second premise function was called is no longer reliable. This test now
+confirms a successful application."
   (let ((axiom-incon-count 0)
         (premise2-evaluated-flag nil))
 
@@ -538,6 +632,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun main ()
+  "The main entry point for the script.
+It runs the full suite of unit tests and then executes the main `run-prover`
+function to demonstrate the prover's operation."
   (format t "Starting Barebones Theorem Prover Prototype (Refactored - Threaded Independence Rules).~%")
 
   (let ((test-run-successful (run-all-tests))) ; Run unit tests and get success status

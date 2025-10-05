@@ -9,8 +9,26 @@
 
 ;; --- Helper Function: Load Quicklisp ---
 (defun load-quicklisp (&key quicklisp-setup-path)
-  "Loads Quicklisp, using the provided path or defaulting to ~/quicklisp/setup.lisp.
-   Signals an error if the setup file is not found or loading fails."
+  "Loads Quicklisp into the current Lisp session.
+
+This function finds and loads the Quicklisp setup file. It first checks for a
+user-provided path. If none is given, it defaults to '~/quicklisp/setup.lisp'.
+It prints progress messages to *standard-output* and signals a continuable
+error if the setup file cannot be found or loaded.
+
+Parameters:
+  - QUICKLISP-SETUP-PATH (Keyword, Optional): A pathname object or a string
+    specifying the location of the 'setup.lisp' file. Defaults to nil, in
+    which case the function searches the default location.
+
+Returns:
+  - T if Quicklisp is successfully loaded.
+  - Signals an error if the setup file is not found or fails to load.
+
+Side Effects:
+  - Loads the Quicklisp system.
+  - Prints informational messages to *standard-output*.
+  - Prints error messages to *error-output* on failure."
   (let ((ql-setup-path
           (if quicklisp-setup-path
               quicklisp-setup-path
@@ -51,8 +69,23 @@
 
 ;; --- Helper Function: Load Required Libraries ---
 (defun load-required-libraries ()
-  "Loads necessary libraries (Hunchentoot, Jonathan) using Quicklisp.
-   Signals an error if loading fails."
+  "Loads the necessary libraries (Hunchentoot and Jonathan) using Quicklisp.
+
+This function assumes that Quicklisp has already been loaded. It then uses
+`ql:quickload` to fetch and load the Hunchentoot web server and the Jonathan
+JSON library.
+
+Parameters:
+  - None.
+
+Returns:
+  - T if the libraries are loaded successfully.
+  - Signals an error if Quicklisp is not available or if the libraries cannot be loaded.
+
+Side Effects:
+  - Loads Hunchentoot and Jonathan into the Lisp image.
+  - Prints informational messages to *standard-output*.
+  - Prints error messages to *error-output* on failure."
   (format t "Loading required libraries (Hunchentoot, Jonathan) using Quicklisp...~%")
   (handler-case
       (ql:quickload '(:hunchentoot :jonathan))
@@ -70,7 +103,25 @@
 
 (defun setup-dependencies (&key quicklisp-setup-path)
   "Sets up the Lisp session by loading Quicklisp and required libraries.
-   Does NOT load application-specific code or switch packages."
+
+This is the main entry point for initializing the environment. It orchestrates
+the loading of Quicklisp and then the specific project dependencies. It does not
+load any application-specific code.
+
+Parameters:
+  - QUICKLISP-SETUP-PATH (Keyword, Optional): The path to the Quicklisp 'setup.lisp'
+    file. This is passed directly to the `load-quicklisp` function. If nil,
+    the default path '~/quicklisp/setup.lisp' is used.
+
+Returns:
+  - T upon successful completion.
+  - Signals an error if any dependency fails to load.
+
+Side Effects:
+  - Calls `load-quicklisp` and `load-required-libraries`.
+  - The Lisp environment will have Quicklisp, Hunchentoot, and Jonathan loaded
+    and ready for use.
+  - Prints informational messages to *standard-output*."
 
   (format t "~&Starting dependency setup...~%")
 

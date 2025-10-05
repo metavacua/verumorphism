@@ -4,6 +4,17 @@
 
 ;;; Axioms (functions directly implementing axioms)
 (defun rwsdl-min-axiom-con-r (expression thread-type)
+  "Implements the 'CON' (Consistency) axiom.
+Its return value depends on the thread type, defining the base case for proofs.
+In a :dual thread, it behaves like a :proof thread for this axiom.
+
+Parameters:
+  - EXPRESSION: The expression to evaluate, expected to be 'CON'.
+  - THREAD-TYPE: The context, one of :proof, :refutation, or :dual.
+
+Returns:
+  - :proof if the axiom applies in the given thread.
+  - :no_proof or :no_closure otherwise."
   (if (eq expression 'CON)
       (case thread-type
         (:proof :proof)
@@ -14,6 +25,17 @@
         (otherwise :no_proof))))
 
 (defun rwsdl-min-axiom-incon-l (expression thread-type)
+  "Implements the 'INCON' (Inconsistency) axiom.
+Its return value depends on the thread type, defining the base case for refutations.
+In a :dual thread, it behaves like a :refutation thread for this axiom.
+
+Parameters:
+  - EXPRESSION: The expression to evaluate, expected to be 'INCON'.
+  - THREAD-TYPE: The context, one of :proof, :refutation, or :dual.
+
+Returns:
+  - :refuted if the axiom applies in the given thread.
+  - :no_refutation or :no_closure otherwise."
   (if (eq expression 'INCON)
       (case thread-type
         (:refutation :refuted)
@@ -27,6 +49,16 @@
 ;;; Inference Rules (functions directly implementing rules)
 
 (defun rwsdl-min-rule-or-thread-r (expression thread-type)
+  "Implements the right-sided OR rule.
+In a :proof thread, it succeeds if either sub-expression is proven.
+In a :dual thread, it propagates :proof, :refuted, or :no_closure status.
+
+Parameters:
+  - EXPRESSION: The OR expression to evaluate, e.g., '(OR_Thread A B)'.
+  - THREAD-TYPE: The current thread context.
+
+Returns:
+  - The result of the logical OR operation based on the thread context."
   (if (and (listp expression) (eq (car expression) 'OR_Thread) (cadr expression) (caddr expression))
       (let ((a (cadr expression))
             (b (caddr expression)))
@@ -47,6 +79,16 @@
         (otherwise :no_proof))))
 
 (defun rwsdl-min-rule-and-thread-r (expression thread-type)
+  "Implements the right-sided AND rule.
+In a :proof thread, it succeeds only if both sub-expressions are proven.
+In a :dual thread, it propagates status, prioritizing :no_closure.
+
+Parameters:
+  - EXPRESSION: The AND expression to evaluate, e.g., '(AND_Thread A B)'.
+  - THREAD-TYPE: The current thread context.
+
+Returns:
+  - The result of the logical AND operation based on the thread context."
   (if (and (listp expression) (eq (car expression) 'AND_Thread) (cadr expression) (caddr expression))
       (let ((a (cadr expression))
             (b (caddr expression)))
@@ -66,6 +108,19 @@
         (otherwise :no_proof))))
 
 (defun rwsdl-min-rule-duality-r (expression thread-type)
+  "Implements the right-sided DUALITY rule.
+This rule evaluates its sub-expression in a :dual thread. If the dual thread
+finds a refutation, this rule concludes a proof. It propagates a :no_closure
+state if the dual thread cannot reach a definitive conclusion.
+
+Parameters:
+  - EXPRESSION: The DUALITY expression, e.g., '(DUALITY A)'.
+  - THREAD-TYPE: The current thread context.
+
+Returns:
+  - :proof if the sub-expression is refuted in the dual context.
+  - :no_closure if the dual context evaluation is inconclusive.
+  - :no_proof otherwise."
   (if (and (listp expression) (eq (car expression) 'DUALITY) (cadr expression))
       (let ((a (cadr expression)))
         (print (format nil "*** Duality Rule (Proof/Dual Thread) triggered for: ~a in thread type ~a ***" expression thread-type))
@@ -91,6 +146,16 @@
 
 
 (defun rwsdl-min-rule-or-refutation-l (expression thread-type)
+  "Implements the left-sided OR rule for refutations.
+In a :refutation thread, it succeeds if either sub-expression is refuted.
+In a :dual thread, it propagates status.
+
+Parameters:
+  - EXPRESSION: The OR expression for refutation, e.g., '(OR_Refutation A B)'.
+  - THREAD-TYPE: The current thread context.
+
+Returns:
+  - The result of the logical OR operation in a refutation context."
   (if (and (listp expression) (eq (car expression) 'OR_Refutation) (cadr expression) (caddr expression))
       (let ((a (cadr expression))
             (b (caddr expression)))
@@ -112,6 +177,16 @@
 
 
 (defun rwsdl-min-rule-and-refutation-l (expression thread-type)
+  "Implements the left-sided AND rule for refutations.
+In a :refutation thread, it succeeds only if both sub-expressions are refuted.
+In a :dual thread, it propagates status.
+
+Parameters:
+  - EXPRESSION: The AND expression for refutation, e.g., '(AND_Refutation A B)'.
+  - THREAD-TYPE: The current thread context.
+
+Returns:
+  - The result of the logical AND operation in a refutation context."
   (if (and (listp expression) (eq (car expression) 'AND_Refutation) (cadr expression) (caddr expression))
       (let ((a (cadr expression))
             (b (caddr expression)))
@@ -131,6 +206,19 @@
         (otherwise :no_refutation))))
 
 (defun rwsdl-min-rule-duality-l (expression thread-type)
+  "Implements the left-sided DUALITY rule.
+This rule evaluates its sub-expression in a :dual thread. If the dual thread
+finds a proof, this rule concludes a refutation. It propagates a :no_closure
+state if the dual thread cannot reach a definitive conclusion.
+
+Parameters:
+  - EXPRESSION: The DUALITY expression, e.g., '(DUALITY A)'.
+  - THREAD-TYPE: The current thread context.
+
+Returns:
+  - :refuted if the sub-expression is proven in the dual context.
+  - :no_closure if the dual context evaluation is inconclusive.
+  - :no_refutation otherwise."
   (if (and (listp expression) (eq (car expression) 'DUALITY) (cadr expression))
       (let ((a (cadr expression)))
         (print (format nil "*** Duality Rule (Refutation/Dual Thread) triggered for: ~a in thread type ~a ***" expression thread-type))
@@ -157,6 +245,16 @@
 
 ;;; Minimal Self-Interpretation (modified to handle :dual thread type)
 (defun rwsdl-min-self-interpret (expression thread-type)
+  "The core interpreter function that dispatches expressions to the appropriate
+axiom or rule handler based on the expression structure and thread type.
+
+Parameters:
+  - EXPRESSION: The weavex expression to be interpreted.
+  - THREAD-TYPE: The current evaluation context (:proof, :refutation, or :dual).
+
+Returns:
+  - The result of the evaluation, which can be :proof, :refuted, :no_proof,
+    :no_refutation, or :no_closure."
   (cond
     ((eq expression 'CON) (rwsdl-min-axiom-con-r expression thread-type))
     ((eq expression 'INCON) (rwsdl-min-axiom-incon-l expression thread-type))
@@ -175,6 +273,14 @@
 
 ;;; Evaluation Functions (modified to handle :dual thread type)
 (defun rwsdl-min-evaluate (expression thread-type)
+  "A wrapper for the self-interpreter that validates the thread type.
+
+Parameters:
+  - EXPRESSION: The expression to evaluate.
+  - THREAD-TYPE: The evaluation context.
+
+Returns:
+  - The result from `rwsdl-min-self-interpret`."
   (case thread-type
     (:proof (rwsdl-min-self-interpret expression thread-type))
     (:refutation (rwsdl-min-self-interpret expression thread-type))
@@ -184,17 +290,26 @@
 
 ;;; Proof, Refutation, and Dual Threads (using rwsdl-min-evaluate)
 (defun rwsdl-min-proof-thread (expression)
+  "A convenience function to evaluate an expression in a :proof thread."
   (rwsdl-min-evaluate expression :proof))
 
 (defun rwsdl-min-refutation-thread (expression)
+  "A convenience function to evaluate an expression in a :refutation thread."
   (rwsdl-min-evaluate expression :refutation))
 
-(defun rwsdl-min-dual-thread (expression)     ; New Dual Thread function
+(defun rwsdl-min-dual-thread (expression)
+  "A convenience function to evaluate an expression in a :dual thread."
   (rwsdl-min-evaluate expression :dual))
 
 
 ;;; Bootstrap Loop Test (modified to test dual threads and "no closure" output)
 (defun rwsdl-min-bootstrap-loop-test ()
+  "Runs a series of tests on different expressions across all thread types.
+This function demonstrates the behavior of the system, including the new :dual
+thread and the :no_closure outcome, by printing the results of each evaluation.
+
+Side Effects:
+  - Prints a formatted report of the test evaluations to standard output."
   (print "*** RWSDL-Min Bootstrap Loop Test (Self-Interpreted, Corrected Rules, Dual Threads) ***")
 
   (let ((test-expressions '(

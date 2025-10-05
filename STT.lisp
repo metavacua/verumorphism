@@ -37,25 +37,41 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defvar *frontend-directory* nil
-  "The absolute path to the directory containing the frontend HTML, CSS, and JS files.
-   Defaults to the current working directory if NIL when START-REFUTER-API is called.")
+  "The absolute path to the directory containing frontend static files.
+
+This path is used by `start-refuter-api` as the `:document-root` for the
+Hunchentoot web server. If this variable is `nil` when `start-refuter-api`
+is called, the system will default to using the directory where the script
+itself is located. It can be set manually before calling `start-refuter-api`
+or via the `:frontend-dir` keyword argument.")
 
 (defvar *api-server* nil
-  "Holds the current Hunchentoot acceptor instance for the refuter API.
-   Used by the restart function and signal handler to stop a running server.")
+  "Holds the active Hunchentoot acceptor (server) instance.
+
+This variable is set by `start-refuter-api` and is used by `stop-refuter-api`
+and `restart-refuter-api` to control the server. Its value is `nil` when the
+server is not running.")
 
 ;; FIXED: Corrected variable name typo
 (defvar *refuter-api-file-path* nil
-  "Stores the absolute pathname of the refuter-api.lisp file after it has been loaded.
-   Used by restart-refuter-api to reload the source file.
-   This variable is set automatically when the file is loaded.")
+  "Stores the absolute pathname of this script file.
+
+This path is automatically set when the file is loaded. It is used by the
+`restart-refuter-api` function to reload the source file, ensuring that any
+changes made to the code are applied upon restart.")
 
 ;; Global variables to store the last used startup arguments for restart
 (defvar *last-started-port* 8080
-  "Stores the port number used in the most recent START-REFUTER-API call.")
+  "Stores the port number from the last successful server start.
+
+This value is used by `restart-refuter-api` as the default port if no new
+port is specified, allowing for easy restarts with the same configuration.")
 
 (defvar *last-started-frontend-dir* nil
-  "Stores the frontend directory pathname used in the most recent START-REFUTER-API call.")
+  "Stores the frontend directory path from the last successful server start.
+
+This value is used by `restart-refuter-api` as the default frontend directory
+if no new directory is specified, facilitating quick restarts.")
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -76,8 +92,22 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun stop-refuter-api ()
-  "Stops the running refuter API server.
-   Includes FINISH-OUTPUT and small sleep for immediate REPL feedback."
+  "Stops the running Hunchentoot server instance if it is active.
+
+This function checks if the `*api-server*` variable holds a server instance.
+If it does, it calls `hunchentoot:stop`, sets `*api-server*` to `nil`, and
+prints status messages. It handles potential errors during the shutdown process.
+
+Parameters:
+  - None.
+
+Returns:
+  - T if the server was stopped or was already stopped.
+
+Side Effects:
+  - Stops the Hunchentoot server.
+  - Sets `*api-server*` to `nil`.
+  - Prints informational messages to *standard-output*."
   (when *api-server*
     (format t "~&[INFO] Stopping refuter API server...~%")
     (finish-output) ;; Ensure message is displayed immediately
@@ -97,9 +127,20 @@
 
 ;; Define the signal handler before the function that uses it.
 (defun handle-termination-signal (signal &rest args)
-  "Handler function for termination signals (SIGINT, SIGTERM).
-   Calls STOP-REFUTER-API and exits the Lisp process.
-   Accepts &rest args to handle potential unexpected arguments from sb-sys:enable-interrupt."
+  "Signal handler for gracefully shutting down the server on SIGINT or SIGTERM.
+
+This function is registered by `start-refuter-api` to handle termination
+signals. It calls `stop-refuter-api` to ensure the web server is cleanly
+shut down and then exits the Lisp process.
+
+Parameters:
+  - SIGNAL: The signal being handled (e.g., `sb-posix:sigint`).
+  - ARGS: A rest argument to capture any additional arguments passed by the
+    signal handling mechanism.
+
+Side Effects:
+  - Stops the web server.
+  - Terminates the Lisp process with exit code 0."
   (declare (ignore args)) ;; Ignore the rest of the arguments
   (format t "~&[INFO] Received signal ~A. Stopping server...~%" signal)
   (finish-output) ;; Ensure message is displayed immediately
@@ -114,9 +155,28 @@
 ;; Helper to restart the server for convenience during testing
 ;; (Defined after START-REFUTER-API, but relies on its definition being evaluated)
 (defun restart-refuter-api (&key (port nil port-provided-p) (frontend-dir nil frontend-dir-provided-p))
-  "Restarts the refuter API server.
-   If PORT or FRONTEND-DIR are not provided, uses the values from the last successful start.
-   Includes FINISH-OUTPUT and small sleeps for immediate REPL feedback."
+  "Stops, reloads the source file, and restarts the refuter API server.
+
+This function provides a convenient way to apply code changes and restart the
+server. It first stops any running server instance. It then reloads this
+source file using the path stored in `*refuter-api-file-path*`. Finally, it
+starts the server again, using either newly provided arguments or the ones
+from the last successful start.
+
+Parameters:
+  - PORT (Keyword, Optional): The port number to listen on. If not provided,
+    defaults to the value of `*last-started-port*`.
+  - FRONTEND-DIR (Keyword, Optional): The path to the frontend assets directory.
+    If not provided, defaults to the value of `*last-started-frontend-dir*`.
+
+Returns:
+  - The new Hunchentoot acceptor instance, or `nil` on failure.
+
+Side Effects:
+  - Stops the current server.
+  - Reloads the `STT.lisp` file.
+  - Starts a new server instance.
+  - Prints informational messages."
   (format t "~&[INFO] Attempting to restart refuter API server...~%")
   (finish-output) ;; Ensure message is displayed immediately
   (sleep 0.01) ;; Small sleep to potentially aid output flushing
@@ -159,7 +219,13 @@
 
 ;; Web endpoint to stop the server.
 (define-easy-handler (stop-server-endpoint :uri "/stop-server") ()
-  "Web endpoint to stop the refuter API server gracefully."
+  "A web endpoint to stop the running server.
+
+This handler exposes the `stop-refuter-api` functionality via an HTTP GET
+request to `/stop-server`. It is intended for administrative or testing purposes.
+
+Returns:
+  - A JSON object with a 'status' and 'message' field indicating success or failure."
   (format t "~&[INFO] Entering /stop-server handler...~%")
   (finish-output)
 
@@ -176,7 +242,14 @@
 
 ;; Web endpoint to restart the server. Uses last used arguments.
 (define-easy-handler (restart-server-endpoint :uri "/restart-server") ()
-  "Web endpoint to restart the refuter API server. Uses last used arguments."
+  "A web endpoint to restart the running server.
+
+This handler exposes the `restart-refuter-api` functionality via an HTTP GET
+request to `/restart-server`. It uses the last known configuration for the
+restart.
+
+Returns:
+  - A JSON object with a 'status' and 'message' field indicating success or failure."
   (format t "~&[INFO] Entering /restart-server handler...~%")
   (finish-output)
 
@@ -195,7 +268,20 @@
 ;; FIXED: Corrected :uri specification to a string.
 ;; Added method check within the handler.
 (define-easy-handler (refute-endpoint :uri "/refute") ()
-  "Placeholder API endpoint to receive a formula for refutation."
+  "The main API endpoint for submitting a formula to be refuted.
+
+This handler currently acts as a placeholder. It accepts POST requests at
+`/refute`, reads the raw post data, and returns a JSON response acknowledging
+receipt. The actual refutation logic is not yet implemented here.
+
+Request Method:
+  - POST
+
+Request Body:
+  - The formula to be processed, typically as a string or JSON.
+
+Returns:
+  - A JSON object with a 'status' and 'message' field."
   (format t "~&[INFO] Entering /refute handler (placeholder)...~%")
   (finish-output)
 
@@ -222,12 +308,30 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun start-refuter-api (&key (port 8080) (frontend-dir nil frontend-dir-provided-p))
-  "Starts the Hunchentoot web server for the refuter API and serves frontend files.
-   Defaults *frontend-directory* to the script's directory if not provided.
-   Includes error handling for 'address in use'.
-   Changes the process's CWD to *frontend-directory* (useful for other file ops).
-   Installs a SIGINT handler for graceful shutdown.
-   Uses easy-acceptor with :document-root for static file serving."
+  "Starts the Hunchentoot web server for the refuter API.
+
+This is the main function to start the web service. It configures and starts
+a Hunchentoot `easy-acceptor` that serves static files from a specified
+directory and handles API requests defined with `define-easy-handler`. It also
+sets up signal handlers for graceful shutdown (Ctrl+C).
+
+Parameters:
+  - PORT (Keyword, Optional): The TCP port number to listen on. Defaults to 8080.
+  - FRONTEND-DIR (Keyword, Optional): A pathname or string specifying the
+    directory of static frontend files to serve. If not provided, it defaults
+    to the directory containing this script.
+
+Returns:
+  - The Hunchentoot acceptor instance on success.
+  - NIL on failure (e.g., if the port is already in use).
+
+Side Effects:
+  - Starts a Hunchentoot server in a new thread.
+  - Sets `*api-server*`, `*frontend-directory*`, `*last-started-port*`, and
+    `*last-started-frontend-dir*`.
+  - Changes the current working directory of the Lisp process to the frontend directory.
+  - Installs signal handlers for SIGINT and SIGTERM.
+  - Blocks the calling thread in a loop until a signal is received."
 
   (format t "~&[INFO] Starting refuter API server...~%")
   (finish-output) ;; Ensure message is displayed immediately

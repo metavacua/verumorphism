@@ -4,7 +4,12 @@
 
 (defclass relnet-node ()
   ((name :initarg :name :accessor relnet-node-name)
-   (type :initarg :type :accessor relnet-node-type)))
+   (type :initarg :type :accessor relnet-node-type))
+  (:documentation "Represents a node in the relational network, enhanced with a type.
+
+Slots:
+  - NAME: The symbolic name of the node.
+  - TYPE: The type of the node (e.g., 'formula', 'term')."))
 
 (defvar *knowledge-base* nil "Global Knowledge Base (Minimal for Prototype)")
 
@@ -570,6 +575,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun main ()
+  "The main entry point for the script.
+It runs the full suite of unit tests and then executes the main `run-prover`
+function to demonstrate the prover's operation."
   (format t "Starting Barebones Theorem Prover Prototype (Refactored - Threaded Independence Rules).~%")
 
   (let ((test-run-successful (run-all-tests))) ; Run unit tests and get success status

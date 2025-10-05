@@ -8,30 +8,50 @@
 
 (defclass relnet-node ()
   ((name :initarg :name :accessor relnet-node-name)
-   (type :initarg :type :accessor relnet-node-type)))
+   (type :initarg :type :accessor relnet-node-type))
+  (:documentation "Represents a node in the relational network, enhanced with a type.
+This is a basic structure for elements within the prover's universe.
 
-(defvar *knowledge-base* nil "Global Knowledge Base (Minimal for Prototype)")
+Slots:
+  - NAME: The symbolic name of the node.
+  - TYPE: The type of the node (e.g., 'formula', 'term')."))
+
+(defvar *knowledge-base* nil
+  "The global knowledge base for the prover. In this prototype, it is not
+used beyond being passed to axiom and rule functions.")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Complexity Metrics - Global Counters
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defvar *axiom-applications-count* 0 "Counter for axiom applications.")
-(defvar *rule-applications-count* 0 "Counter for rule applications.")
+(defvar *axiom-applications-count* 0
+  "Counts the total number of axiom applications within a single `run-prover` call.
+This serves as a basic complexity metric and is reset by `initialize-knowledge-base`.")
+(defvar *rule-applications-count* 0
+  "Counts the total number of rule applications within a single `run-prover` call.
+This serves as a basic complexity metric and is reset by `initialize-knowledge-base`.")
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Formula Representation (WFF and RFF as Lisp Lists)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun make-con () '(con))
-(defun make-dep (formula1 formula2) `(dep ,formula1 ,formula2))
-(defun make-ind (formula1 formula2) `(ind ,formula1 ,formula2))
+(defun make-con ()
+  "Constructs a constant 'con' formula."
+  '(con))
+(defun make-dep (formula1 formula2)
+  "Constructs a dependence formula '(dep F1 F2)'."
+  `(dep ,formula1 ,formula2))
+(defun make-ind (formula1 formula2)
+  "Constructs an independence formula '(ind F1 F2)'."
+  `(ind ,formula1 ,formula2))
 
 (defun formula-type (formula)
+  "Extracts the type (e.g., 'dep', 'ind', 'con') from a formula."
   (first formula))
 
 (defun formula-arguments (formula)
+  "Extracts the arguments from a formula."
   (rest formula))
 
 
@@ -40,9 +60,22 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun axiom-ConR (formula kb)
-  "Proof Axiom (axiom ConR (() (dep A A))). Formula-aware implementation.
-   If formula is '(dep A A)', it's axiomatically proven, and returns A.
-   [Complexity Metric: axiom-applications-count]"
+  "Implements the 'Consistency Right' (ConR) axiom for formulas of the form '(dep A A)'.
+
+This axiom states that any formula is dependent on itself. If the input `formula`
+matches the structure `(dep A A)`, the axiom applies, and the function returns A
+to signify that the sub-formula is proven.
+
+Parameters:
+  - FORMULA: The formula to check against the axiom.
+  - KB: The knowledge base (ignored in this implementation).
+
+Returns:
+  - The sub-formula `A` if the axiom applies.
+  - `NIL` if the axiom does not apply.
+
+Side Effects:
+  - Increments `*axiom-applications-count*`."
   (declare (ignore kb))
   (incf *axiom-applications-count*)
   (format t "Proof Thread: Applying ConR axiom to formula: ~A~%" formula)
@@ -61,9 +94,22 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun rule-dependence-r (formula kb)
-  "Dependence Right Rule (rule dependenceR). Formula-aware. Sequential AND in Proof.
-   Applies to (dep A B) formulae.
-   [Complexity Metric: rule-applications-count]"
+  "Implements the 'Dependence Right' (dependenceR) rule.
+
+This rule applies to formulas of the form `(dep A B)`. It attempts to prove
+the formula by recursively proving both sub-formulas `A` and `B`. This represents
+a logical AND condition.
+
+Parameters:
+  - FORMULA: The formula to which the rule is applied.
+  - KB: The knowledge base (ignored).
+
+Returns:
+  - The original `formula` if both sub-proofs succeed.
+  - `NIL` if the rule does not apply or if either sub-proof fails.
+
+Side Effects:
+  - Increments `*rule-applications-count*`."
   (format t "Proof Thread: Attempting rule dependenceR (Dependence Right) on formula: ~A~%" formula)
   (incf *rule-applications-count*)
   (if (eq (formula-type formula) 'dep)
@@ -85,9 +131,24 @@
 
 
 (defun rule-independence-r (formula kb)
-  "Independence Right Rule (rule independenceR) - Formula-aware & THREADED. Concurrent OR in Proof.
-   Applies to (ind A B) formulae.
-   [Complexity Metric: rule-applications-count]"
+  "Implements the 'Independence Right' (independenceR) rule.
+
+This rule applies to formulas of the form `(ind A B)`. It attempts to prove
+the formula by recursively proving either sub-formula `A` or `B`. This represents
+a logical OR condition. The prototype simulates this by trying one after the other.
+
+Parameters:
+  - FORMULA: The formula to which the rule is applied.
+  - KB: The knowledge base (ignored).
+
+Returns:
+  - Two values:
+    1. The original `formula` if either sub-proof succeeds, otherwise `NIL`.
+    2. A keyword (`:premise1-satisfied` or `:premise2-satisfied`) indicating
+       which branch succeeded, otherwise `NIL`.
+
+Side Effects:
+  - Increments `*rule-applications-count*`."
   (format t "Proof Thread: Attempting rule independenceR (Independence Right) - THREADED on formula: ~A~%" formula)
   (incf *rule-applications-count*)
   (if (eq (formula-type formula) 'ind)
@@ -128,10 +189,21 @@
 
 
 (defun proof-function (formula)
-  "Proof Function: Attempts to prove a formula using axioms and rules.
-   Sequential process: Tries ConR, then *DEP*R, then *IND*R in order.
-   Returns the proven formula itself upon success, nil otherwise.
-   Now formula-aware: takes a formula as input."
+  "The main proof-seeking function that attempts to prove a given formula.
+
+It orchestrates the proof search by sequentially applying a set of axioms and rules:
+1. `axiom-ConR`
+2. `rule-dependence-r`
+3. `rule-independence-r`
+
+The function returns as soon as one of these methods succeeds.
+
+Parameters:
+  - FORMULA: The formula to be proven.
+
+Returns:
+  - The proven formula itself on success.
+  - `NIL` if no proof is found using the available axioms and rules."
   (format t "Proof Thread: Starting for formula ~A.~%" formula)
 
   ;; 1. Try axiom ConR
@@ -167,22 +239,29 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun initialize-knowledge-base ()
-  "Initializes the global *knowledge-base* and resets complexity counters."
+  "Initializes the prover state by resetting the knowledge base and complexity counters."
   (setf *knowledge-base* nil)
   (reset-complexity-counters))
 
 (defun reset-complexity-counters ()
-  "Resets complexity counters."
+  "Resets the global complexity counters to zero."
   (setf *axiom-applications-count* 0)
   (setf *rule-applications-count* 0))
 
 
 (defun run-prover (formula)
-  "Runs the theorem prover prototype with proof threads on a given formula.
-   Orchestrates proof attempts and determines the overall prover result.
-   [Complexity Reporting: axiom-applications-count, rule-applications-count]
-   Now formula-aware: takes a formula as input.
-   Outputs formula if proven, nil if not."
+  "Top-level function to run the theorem prover on a single formula.
+
+This function initializes the prover's state and then invokes the main
+`proof-function` to attempt to prove the given formula. It serves as the
+primary entry point for a single proof attempt.
+
+Parameters:
+  - FORMULA: The formula to be proven.
+
+Returns:
+  - The proven formula on success.
+  - `NIL` if the formula cannot be proven."
   (format t "Prover: Initializing Knowledge Base.~%")
   (initialize-knowledge-base)
 
@@ -204,6 +283,17 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun main ()
+  "The main entry point for demonstrating and testing the prover.
+
+This function constructs several example formulas and runs the prover on each
+one, printing the results and complexity metrics to standard output. It serves
+as a test harness for the prover's logic.
+
+Parameters:
+  - None.
+
+Returns:
+  - Nothing."
   (format t "Starting Formula-Aware Theorem Prover Prototype (R-Rules Only - ConR Axiom).~%")
 
   ;; Example Formula Construction
