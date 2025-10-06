@@ -51,13 +51,13 @@
 
 ;; --- Helper Function: Load Required Libraries ---
 (defun load-required-libraries ()
-  "Loads necessary libraries (Hunchentoot, Jonathan) using Quicklisp.
+  "Loads necessary libraries (Hunchentoot, Jonathan, FiveAM) using Quicklisp.
    Signals an error if loading fails."
-  (format t "Loading required libraries (Hunchentoot, Jonathan) using Quicklisp...~%")
+  (format t "Loading required libraries (Hunchentoot, Jonathan, FiveAM) using Quicklisp...~%")
   (handler-case
-      (ql:quickload '(:hunchentoot :jonathan))
+      (ql:quickload '(:hunchentoot :jonathan :fiveam))
     (error (e)
-      (format *error-output* "~&Error loading required libraries (Hunchentoot, Jonathan): ~A~%" e)
+      (format *error-output* "~&Error loading required libraries (Hunchentoot, Jonathan, FiveAM): ~A~%" e)
       (format *error-output* "~&Please ensure these libraries are installed via Quicklisp (using ql:quickload in a session where Quicklisp is loaded).~%")
       ;; Signal a serious error if libraries cannot be loaded
       (error "Failed to load required libraries. Cannot proceed with setup.")))

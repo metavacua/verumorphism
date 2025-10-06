@@ -1,0 +1,22 @@
+# Project-Specific Knowledge Base (LLMS)
+
+This file contains project-specific domain knowledge, architectural principles, and hard-won lessons that are not easily captured in structured data. It serves as a long-term memory for the agent.
+
+## Core Architectural Principles
+*   The system is composed of a Lisp-based backend and a simple HTML/CSS/JS frontend.
+*   The backend exposes a Refuter API on port 8080.
+*   The application logic is bootstrapped via `Preamble.lisp`.
+
+## Environment Limitations
+*   **CRITICAL - DO NOT ATTEMPT LISP DEVELOPMENT:** The SBCL (Steel Bank Common Lisp) runtime in this environment is fundamentally unstable and unusable.
+*   **Primary Issue:** There is a severe, non-deterministic runtime constraint that causes even simple, dependency-free Lisp code to hang and time out after approximately 400 seconds.
+*   **Secondary Issue:** The environment also has a network-related timeout that prevents the installation of new dependencies via Quicklisp.
+*   **Definitive Conclusion:** This environment is **NOT VIABLE** for Lisp development. The root cause appears to be an incompatibility between the SBCL process and the sandboxing technology. All attempts to execute Lisp code are at extreme risk of failure.
+
+## Known Issues & Workarounds
+*   The project currently lacks an automated test suite. All previous attempts to build one have failed due to the environment limitations described above.
+
+## Key Functions & Modules
+*   `Preamble.lisp`: Main entry point, handles setup and dependency loading.
+*   `refuter-api.lisp`: Defines the core API endpoints.
+*   `Weaver_system.lisp`: Contains core logic and manual test functions.
