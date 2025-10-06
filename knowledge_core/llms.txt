@@ -1,0 +1,18 @@
+# Project-Specific Knowledge Base (LLMS)
+
+This file contains project-specific domain knowledge, architectural principles, and hard-won lessons that are not easily captured in structured data. It serves as a long-term memory for the agent.
+
+## Core Architectural Principles
+*   The system is composed of a Lisp-based backend and a simple HTML/CSS/JS frontend.
+*   The backend exposes a Refuter API on port 8080.
+*   The application logic is bootstrapped via `Preamble.lisp`.
+
+## Known Issues & Workarounds
+*   The project currently lacks an automated test suite. Testing is performed manually.
+*   ...
+
+## Key Functions & Modules
+*   `Preamble.lisp`: Main entry point, handles setup and dependency loading.
+*   `refuter-api.lisp`: Defines the core API endpoints.
+*   `Weaver_system.lisp`: Contains core logic and manual test functions.
+*   ...
