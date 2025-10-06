@@ -7,6 +7,11 @@ This file contains project-specific domain knowledge, architectural principles, 
 *   The backend exposes a Refuter API on port 8080.
 *   The application logic is bootstrapped via `Preamble.lisp`.
 
+## Environment Limitations
+*   **CRITICAL: The command execution environment has a strict timeout of approximately 400 seconds.**
+*   This timeout prevents the use of Quicklisp (`ql:quickload` or `quicklisp-quickstart:install`) for fetching and installing new Lisp libraries from the network.
+*   **Conclusion:** The project is effectively **dependency-frozen**. No new external Lisp libraries can be added. All development must rely on the existing dependencies or pure Lisp code.
+
 ## Known Issues & Workarounds
 *   The project currently lacks an automated test suite. Testing is performed manually.
 *   ...
