@@ -1,3 +1,21 @@
+(defpackage #:refuter-core
+  (:use #:cl)
+  (:export #:axiom-inconl
+           #:rule-duald-dual-l
+           #:rule-dual-incon
+           #:rule-dual-l
+           #:rule-independence-l
+           #:rule-dependence-l
+           #:run-refuter
+           #:make-incon
+           #:make-dep
+           #:make-ind
+           #:make-dual
+           #:formula-type
+           #:formula-arguments))
+
+(in-package #:refuter-core)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Refactored RelNet Weaver Core (Formula-Aware Prototype) - L Rules Only - Operator-Specific Rules - REFUTER (Concise Output) - REFINED INCON/DUAL-INCON
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -197,67 +215,3 @@
 ;;; Main Entry Point - Run Refuter with Formula - COMPLEXITY REPORTING and TESTING
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun main ()
-  (format t "Starting Formula-Aware Theorem Refuter Prototype (L-Rules Only - Operator-Specific Rules - Refined Incon/Dual-Incon).~%")
-
-  ;; Example Formula Construction
-  (let* ((incon-formula (make-incon))
-         (dep-formula (make-dep incon-formula incon-formula))
-         (ind-formula (make-ind incon-formula incon-formula))
-         (self-ind-formula (make-ind incon-formula incon-formula)) ; (ind A A) where A is (incon) - for InconL axiom test
-         (complex-formula (make-ind dep-formula ind-formula))
-         (self-ref-formula (make-ind incon-formula incon-formula)) ; another (ind A A) for testing InconL axiom
-         (dual-incon-formula (make-dual incon-formula))         ; (dual incon) for dualL rule test - now dual-incon rule
-         (dual-dep-formula (make-dual dep-formula))           ; (dual (dep incon incon)) for dualL rule test
-         (duald-dual-incon-formula (make-dual (make-dual incon-formula)))) ; (dual (dual incon)) for dualdL rule test
-
-
-    (format t "~%--- Testing with incon formula ---~%")
-    (reset-refutation-complexity-counters)
-    (let ((refuter-result (run-refuter incon-formula)))
-      (format t "~%Refuter Result for formula ~A: ~A~%" incon-formula refuter-result)) ; EXPECTED: (INCON)
-
-    (format t "~%--- Testing with (dep incon incon) formula ---~%")
-    (reset-refutation-complexity-counters)
-    (let ((refuter-result (run-refuter dep-formula)))
-      (format t "~%Refuter Result for formula ~A: ~A~%" dep-formula refuter-result)) ; EXPECTED: NIL
-
-    (format t "~%--- Testing with (ind incon incon) formula ---~%")
-    (reset-refutation-complexity-counters)
-    (let ((refuter-result (run-refuter ind-formula)))
-      (format t "~%Refuter Result for formula ~A: ~A~%" ind-formula refuter-result)) ; EXPECTED: (IND (INCON) (INCON))
-
-    (format t "~%--- Testing with (ind incon incon) - Self Independence Axiom (InconL) ---~%")
-    (reset-refutation-complexity-counters)
-    (let ((refuter-result (run-refuter self-ind-formula))) ; Testing (ind incon incon) - InconL axiom
-      (format t "~%Refuter Result for formula ~A: ~A~%" self-ind-formula refuter-result)) ; EXPECTED: (IND (INCON) (INCON))
-
-    (format t "~%--- Testing with (ind (dep incon incon) (ind incon incon)) formula ---~%")
-    (reset-refutation-complexity-counters)
-    (let ((refuter-result (run-refuter complex-formula)))
-      (format t "~%Refuter Result for formula ~A: ~A~%" complex-formula refuter-result)) ; EXPECTED: (IND (DEP (INCON) (INCON)) (IND (INCON) (INCON)))
-
-    (format t "~%--- Testing with another (ind incon incon) - Self Ref Axiom (InconL) ---~%")
-    (reset-refutation-complexity-counters)
-    (let ((refuter-result (run-refuter self-ref-formula))) ; Another test for (ind incon incon) - InconL axiom
-      (format t "~%Refuter Result for formula ~A: ~A~%" self-ref-formula refuter-result)) ; EXPECTED: (IND (INCON) (INCON))
-
-    (format t "~%--- Testing with (dual incon) formula - dual-incon Rule ---~%")
-    (reset-refutation-complexity-counters)
-    (let ((refuter-result (run-refuter dual-incon-formula))) ; Testing (dual incon) - dual-incon rule
-      (format t "~%Refuter Result for formula ~A: ~A~%" dual-incon-formula refuter-result)) ; EXPECTED: NIL
-
-    (format t "~%--- Testing with (dual (dep incon incon)) formula - dualL Rule ---~%")
-    (reset-refutation-complexity-counters)
-    (let ((refuter-result (run-refuter dual-dep-formula))) ; Testing (dual (dep incon incon)) - dualL rule
-      (format t "~%Refuter Result for formula ~A: ~A~%" dual-dep-formula refuter-result)) ; EXPECTED: NIL
-
-    (format t "~%--- Testing with (dual (dual incon)) formula - dualdL Rule ---~%")
-    (reset-refutation-complexity-counters)
-    (let ((refuter-result (run-refuter duald-dual-incon-formula))) ; Testing (dual (dual incon)) - dualdL rule
-      (format t "~%Refuter Result for formula ~A: ~A~%" duald-dual-incon-formula refuter-result)) ; EXPECTED: NIL
-
-
-    (format t "~%Formula-Aware Theorem Refuter Prototype Finished (L-Rules Only - Operator-Specific Rules - Refined Incon/Dual-Incon).~%")))
-
-(main)
