@@ -1,0 +1,19 @@
+This is SBCL 2.2.9.debian, an implementation of ANSI Common Lisp.
+More information about SBCL is available at <http://www.sbcl.org/>.
+
+SBCL is free software, provided as is, with absolutely no warranty.
+It is mostly in the public domain; some portions are provided under
+BSD-style licenses.  See the CREDITS and COPYING files in the
+distribution for more information.
+While evaluating the form starting at line 10, column 0
+  of #P"/app/src/Preamble.lisp":
+
+debugger invoked on a SB-C::INPUT-ERROR-IN-LOAD in thread
+#<THREAD "main thread" RUNNING {1001348003}>:
+  READ error during LOAD:
+
+    Package QL does not exist.
+
+      Line: 24, Column: 19, File-Position: 1035
+
+      Stream: #<SB-INT:FORM-TRACKING-STREAM for "file /app/src/dependency-loader.lisp" {10013624A3}>
